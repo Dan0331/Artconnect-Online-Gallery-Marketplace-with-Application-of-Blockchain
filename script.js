@@ -191,33 +191,56 @@ async function connectWallet() {
     } 
     
     try { 
-        // Check if connected to Ethereum network 
+        // Check current network 
         const chainId = await window.ethereum.request({ method: 'eth_chainId' }); 
+        const sepoliaChainId = '0xaa36a7'; // Sepolia
         
-        // Ethereum Mainnet: 0x1, Goerli: 0x5, Sepolia: 0xaa36a7 
-        const allowedChains = ['0xaa36a7']; // '0x1', '0x5', 
-        
-        if (!allowedChains.includes(chainId)) { 
-            showToast('Please switch to Sepolia network in MetaMask', 'error'); 
+        if (chainId !== sepoliaChainId) { 
             try { 
-                // Request to switch to Ethereum mainnet 
+                // 🔹 Try to switch to Sepolia
                 await window.ethereum.request({ 
                     method: 'wallet_switchEthereumChain', 
-                    params: [{ chainId: '0x1' }] 
+                    params: [{ chainId: sepoliaChainId }] 
                 }); 
+                showToast('Switched to Sepolia network', 'success');
             } catch (switchError) { 
-                console.error('Failed to switch network:', switchError); 
-                showToast('Please manually switch to Ethereum network in MetaMask', 'error'); 
-                return; 
+                // 🔹 If Sepolia is not added, add it
+                if (switchError.code === 4902) { 
+                    try { 
+                        await window.ethereum.request({ 
+                            method: 'wallet_addEthereumChain', 
+                            params: [{ 
+                                chainId: sepoliaChainId, 
+                                chainName: 'Sepolia Test Network', 
+                                nativeCurrency: { 
+                                    name: 'Sepolia ETH', 
+                                    symbol: 'ETH', 
+                                    decimals: 18 
+                                }, 
+                                rpcUrls: ['https://rpc.sepolia.org'], 
+                                blockExplorerUrls: ['https://sepolia.etherscan.io'] 
+                            }] 
+                        }); 
+                        showToast('Sepolia network added and switched!', 'success');
+                    } catch (addError) { 
+                        console.error('Failed to add Sepolia:', addError); 
+                        showToast('Please add Sepolia manually in MetaMask', 'error'); 
+                        return; 
+                    } 
+                } else { 
+                    console.error('Failed to switch network:', switchError); 
+                    showToast('Please manually switch to Sepolia network in MetaMask', 'error'); 
+                    return; 
+                } 
             } 
         } 
         
+        // Request accounts 
         const accounts = await window.ethereum.request({ 
             method: 'eth_requestAccounts' 
         }); 
         
         if (accounts.length > 0) { 
-            // Validate that it's an Ethereum address 
             if (!isValidEthereumAddress(accounts[0])) { 
                 showToast('Invalid Ethereum address detected', 'error'); 
                 return; 
@@ -228,11 +251,11 @@ async function connectWallet() {
             updateWalletUI(); 
             showToast('Wallet connected successfully!', 'success'); 
             
-            // Listen for account changes 
+            // Listen for account/network changes 
             window.ethereum.on('accountsChanged', handleAccountsChanged); 
             window.ethereum.on('chainChanged', handleChainChanged); 
 
-            // calls function to save user info in db 
+            // Save user info in db 
             await saveUserToFirestore(walletAddress); 
         } 
     } catch (error) { 
@@ -244,6 +267,7 @@ async function connectWallet() {
         } 
     } 
 }
+
 
 function isValidEthereumAddress(address) {
     return /^0x[a-fA-F0-9]{40}$/.test(address);
@@ -1389,5 +1413,6 @@ window.addEventListener('click', function(event) {
         }
     });
 });
+
 
 
