@@ -354,35 +354,35 @@ async function sendPayment(toAddress, amount) {
     }
 
     try {
-        const amountInWei = (amount * 1e18).toString(16);
+        // Convert ETH → Wei safely
+        const amountInWei = '0x' + BigInt(Math.floor(amount * 1e18)).toString(16);
 
-        // send transaction
+        // Trigger MetaMask popup
         const txHash = await window.ethereum.request({
             method: 'eth_sendTransaction',
             params: [{
                 from: walletAddress,
                 to: toAddress,
-                value: '0x' + amountInWei
+                value: amountInWei
             }]
         });
 
         showToast('Transaction sent. Waiting for confirmation...', 'warning');
 
-        // wait for receipt
+        // Wait for confirmation
         let receipt = null;
         while (!receipt) {
             receipt = await window.ethereum.request({
                 method: 'eth_getTransactionReceipt',
                 params: [txHash]
             });
-
             if (!receipt) {
-                await new Promise(r => setTimeout(r, 3000)); // wait 3s before retry
+                await new Promise(r => setTimeout(r, 3000));
             }
         }
 
         if (receipt.status === '0x1') {
-            return txHash; // success
+            return txHash;
         } else {
             throw new Error("Transaction failed on Sepolia");
         }
@@ -392,6 +392,7 @@ async function sendPayment(toAddress, amount) {
         throw error;
     }
 }
+
 
 
 
@@ -737,7 +738,7 @@ async function checkout() {
         return;
     }
 
-    const platformWallet = '0xcE9D5CC73015c2b5c0A2b83af210cA53117AE430'; // default platform wallet
+    const platformWallet = '0xcE9D5CC73015c2b5c0A2b83af210cA53117AE430'; // Platform wallet
 
     try {
         showToast('Processing payment...', 'warning');
@@ -755,13 +756,17 @@ async function checkout() {
             const sellerAmount = totalPrice * 0.9;
             const platformAmount = totalPrice * 0.1;
 
-            // Pay seller
-            const txSeller = await sendPayment(item.sellerId, sellerAmount);
+            // 🔹 Attempt payments (MetaMask will pop up here)
+            let txSeller, txPlatform;
+            try {
+                txSeller = await sendPayment(item.sellerId, sellerAmount);
+                txPlatform = await sendPayment(platformWallet, platformAmount);
+            } catch (paymentError) {
+                showToast("❌ Payment failed: " + paymentError.message, "error");
+                throw paymentError; // 🔹 Stop checkout immediately
+            }
 
-            // Pay platform fee
-            const txPlatform = await sendPayment(platformWallet, platformAmount);
-
-            // Save under buyer -> artBought
+            // 🔹 If payments succeeded → Firestore writes
             await addDoc(collection(db, "users", walletAddress, "artBought"), {
                 artwork: {
                     id: item.id,
@@ -778,7 +783,6 @@ async function checkout() {
                 status: "completed"
             });
 
-            // Save under seller -> artSold
             await addDoc(collection(db, "users", item.sellerId, "artSold"), {
                 artwork: {
                     id: item.id,
@@ -795,16 +799,17 @@ async function checkout() {
             });
         }
 
-        // Clear cart after successful payment
+        // 🔹 Clear cart only if everything succeeded
         clearCart();
         toggleCart();
 
-        showToast('Payment successful! Order confirmed.', 'success');
+        showToast('✅ Payment successful! Order confirmed.', 'success');
     } catch (error) {
         console.error('Checkout failed:', error);
-        showToast('Payment failed. Please try again.', 'error');
+        showToast('❌ Payment failed. Transaction cancelled.', 'error');
     }
 }
+
 
 async function uploadToImgBB(file) {
     const apiKey = "84a54b2c03a399edaad3c48b3184201a";
@@ -1399,3 +1404,4 @@ window.addEventListener('click', function(event) {
         }
     });
 });
+
