@@ -771,7 +771,7 @@ async function checkout() {
         return;
     }
 
-    const platformWallet = '0xcE9D5CC73015c2b5c0A2b83af210cA53117AE430'; // Platform wallet
+    const platformWallet = '0xcE9D5CC73015c2b5c0A2b83af210cA53117AE430'; 
 
     try {
         showToast('Processing payment...', 'warning');
@@ -785,65 +785,55 @@ async function checkout() {
             const timestamp = new Date();
             const totalPrice = item.price * item.quantity;
 
-            // Split payment: 90% seller, 10% platform
             const sellerAmount = totalPrice * 0.9;
             const platformAmount = totalPrice * 0.1;
 
-            let txSeller, txPlatform;
+            // ⚡️ Wait for both to be confirmed before DB writes
+            const txSeller = await sendPayment(item.sellerId, sellerAmount);
+            const txPlatform = await sendPayment(platformWallet, platformAmount);
 
-            // 🔹 Attempt payments, stop immediately if fail
-            try {
-                txSeller = await sendPayment(item.sellerId, sellerAmount);
-                txPlatform = await sendPayment(platformWallet, platformAmount);
-            } catch (paymentError) {
-                console.error("❌ Payment failed:", paymentError);
-                showToast("❌ Payment failed: " + paymentError.message, "error");
-                return; // ⛔ Stop checkout, don't write to Firestore
+            if (txSeller && txPlatform) {
+                // ✅ Only write after confirmed payment
+                await addDoc(collection(db, "users", walletAddress, "artBought"), {
+                    artwork: { id: item.id, title: item.title, imageUrl: item.imageUrl },
+                    price: item.price,
+                    quantity: item.quantity,
+                    sellerId: item.sellerId,
+                    buyerId: walletAddress,
+                    purchasedAt: timestamp,
+                    txSeller,
+                    txPlatform,
+                    status: "completed"
+                });
+
+                await addDoc(collection(db, "users", item.sellerId, "artSold"), {
+                    artwork: { id: item.id, title: item.title, imageUrl: item.imageUrl },
+                    price: item.price,
+                    quantity: item.quantity,
+                    buyerId: walletAddress,
+                    sellerId: item.sellerId,
+                    soldAt: timestamp,
+                    txSeller,
+                    status: "completed"
+                });
+
+                showToast(`Payment successful for ${item.title}`, 'success');
+            } else {
+                showToast(`Payment failed for ${item.title}`, 'error');
             }
-
-            // 🔹 Only after payments succeed → Save to Firestore
-            await addDoc(collection(db, "users", walletAddress, "artBought"), {
-                artwork: {
-                    id: item.id,
-                    title: item.title,
-                    imageUrl: item.imageUrl
-                },
-                price: item.price,
-                quantity: item.quantity,
-                sellerId: item.sellerId,
-                buyerId: walletAddress,
-                purchasedAt: timestamp,
-                txSeller,
-                txPlatform,
-                status: "completed"
-            });
-
-            await addDoc(collection(db, "users", item.sellerId, "artSold"), {
-                artwork: {
-                    id: item.id,
-                    title: item.title,
-                    imageUrl: item.imageUrl
-                },
-                price: item.price,
-                quantity: item.quantity,
-                buyerId: walletAddress,
-                sellerId: item.sellerId,
-                soldAt: timestamp,
-                txSeller,
-                status: "completed"
-            });
         }
 
-        // 🔹 Clear cart only if ALL payments & writes succeeded
-        clearCart();
-        toggleCart();
+        // ✅ Clear cart only if ALL items succeeded
+        cart = [];
+        saveCart();
+        renderCart();
 
-        showToast('✅ Payment successful! Order confirmed.', 'success');
     } catch (error) {
-        console.error('Checkout failed:', error);
-        showToast('❌ Checkout failed. Nothing was saved.', 'error');
+        console.error("Checkout failed:", error);
+        showToast("Checkout failed: " + error.message, "error");
     }
 }
+
 
 
 async function uploadToImgBB(file) {
@@ -1439,6 +1429,7 @@ window.addEventListener('click', function(event) {
         }
     });
 });
+
 
 
 
