@@ -184,66 +184,86 @@ const blockchainDetails = {
 
 
 // Web3 and MetaMask functionality & add in db 
-async function connectWallet() { 
-    if (typeof window.ethereum === 'undefined') { 
-        showToast('Please install MetaMask to use this feature', 'error'); 
-        return; 
-    } 
-    
-    try { 
-        // Check if connected to Ethereum network 
-        const chainId = await window.ethereum.request({ method: 'eth_chainId' }); 
-        
-        // Ethereum Mainnet: 0x1, Goerli: 0x5, Sepolia: 0xaa36a7 
-        const allowedChains = ['0xaa36a7']; // '0x1', '0x5', 
-        
-        if (!allowedChains.includes(chainId)) { 
-            showToast('Please switch to Sepolia network in MetaMask', 'error'); 
-            try { 
-                // Request to switch to Ethereum mainnet 
-                await window.ethereum.request({ 
-                    method: 'wallet_switchEthereumChain', 
-                    params: [{ chainId: '0x1' }] 
-                }); 
-            } catch (switchError) { 
-                console.error('Failed to switch network:', switchError); 
-                showToast('Please manually switch to Ethereum network in MetaMask', 'error'); 
-                return; 
-            } 
-        } 
-        
-        const accounts = await window.ethereum.request({ 
-            method: 'eth_requestAccounts' 
-        }); 
-        
-        if (accounts.length > 0) { 
-            // Validate that it's an Ethereum address 
-            if (!isValidEthereumAddress(accounts[0])) { 
-                showToast('Invalid Ethereum address detected', 'error'); 
-                return; 
-            } 
-            
-            walletAddress = accounts[0]; 
-            walletConnected = true; 
-            updateWalletUI(); 
-            showToast('Wallet connected successfully!', 'success'); 
-            
-            // Listen for account changes 
-            window.ethereum.on('accountsChanged', handleAccountsChanged); 
-            window.ethereum.on('chainChanged', handleChainChanged); 
+async function connectWallet() {
+    if (typeof window.ethereum === 'undefined') {
+        showToast('Please install MetaMask to use this feature', 'error');
+        return;
+    }
 
-            // calls function to save user info in db 
-            await saveUserToFirestore(walletAddress); 
-        } 
-    } catch (error) { 
-        console.error('Failed to connect wallet:', error); 
-        if (error.code === 4001) { 
-            showToast('Connection rejected by user', 'error'); 
-        } else { 
-            showToast('Failed to connect Ethereum wallet', 'error'); 
-        } 
-    } 
+    try {
+        // Get current chainId (in hex)
+        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+
+        // Sepolia chainId in hex & decimal
+        const sepoliaHex = '0xaa36a7';
+        const sepoliaDec = 11155111;
+
+        // Normalize to decimal for easy comparison
+        const currentChain = parseInt(chainId, 16);
+
+        if (currentChain !== sepoliaDec) {
+            showToast('Please switch to Sepolia network in MetaMask', 'error');
+            try {
+                // Request to switch to Sepolia
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: sepoliaHex }]
+                });
+            } catch (switchError) {
+                console.error('Failed to switch network:', switchError);
+                showToast('Please manually switch to Sepolia network in MetaMask', 'error');
+                return;
+            }
+        }
+
+        // Request account access
+        const accounts = await window.ethereum.request({
+            method: 'eth_requestAccounts'
+        });
+
+        if (accounts.length > 0) {
+            if (!isValidEthereumAddress(accounts[0])) {
+                showToast('Invalid Ethereum address detected', 'error');
+                return;
+            }
+
+            walletAddress = accounts[0];
+            walletConnected = true;
+            updateWalletUI();
+            showToast('Wallet connected successfully!', 'success');
+
+            // Listen for account/network changes
+            window.ethereum.on('accountsChanged', handleAccountsChanged);
+            window.ethereum.on('chainChanged', handleChainChanged);
+
+            // Save user info in Firestore
+            await saveUserToFirestore(walletAddress);
+        }
+
+    } catch (error) {
+        console.error('Failed to connect wallet:', error);
+        if (error.code === 4001) {
+            showToast('Connection rejected by user', 'error');
+        } else {
+            showToast('Failed to connect Ethereum wallet', 'error');
+        }
+    }
 }
+
+function handleChainChanged(chainId) {
+    const sepoliaDec = 11155111;
+    const currentChain = parseInt(chainId, 16);
+
+    if (currentChain !== sepoliaDec) {
+        showToast('Wrong network. Please switch to Sepolia testnet.', 'error');
+        walletConnected = false;
+        walletAddress = null;
+        updateWalletUI();
+    } else {
+        showToast('Network switched to Sepolia ✅', 'success');
+    }
+}
+
 
 function isValidEthereumAddress(address) {
     return /^0x[a-fA-F0-9]{40}$/.test(address);
@@ -1400,4 +1420,5 @@ window.addEventListener('click', function(event) {
         }
     });
 });
+
 
