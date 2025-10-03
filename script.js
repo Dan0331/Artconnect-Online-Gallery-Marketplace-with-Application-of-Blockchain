@@ -772,7 +772,7 @@ async function checkout() {
         return;
     }
 
-    const platformWallet = '0xcE9D5CC73015c2b5c0A2b83af210cA53117AE430'; // default platform wallet
+    const platformWallet = '0xcE9D5CC73015c2b5c0A2b83af210cA53117AE430'; // Platform wallet
 
     try {
         showToast('Processing payment...', 'warning');
@@ -790,13 +790,11 @@ async function checkout() {
             const sellerAmount = totalPrice * 0.9;
             const platformAmount = totalPrice * 0.1;
 
-            // Pay seller
+            // 🔹 Process transactions
             const txSeller = await sendPayment(item.sellerId, sellerAmount);
-
-            // Pay platform fee
             const txPlatform = await sendPayment(platformWallet, platformAmount);
 
-            // Save under buyer -> artBought
+            // 🔹 Only after successful payments → save Firestore records
             await addDoc(collection(db, "users", walletAddress, "artBought"), {
                 artwork: {
                     id: item.id,
@@ -813,7 +811,6 @@ async function checkout() {
                 status: "completed"
             });
 
-            // Save under seller -> artSold
             await addDoc(collection(db, "users", item.sellerId, "artSold"), {
                 artwork: {
                     id: item.id,
@@ -830,16 +827,17 @@ async function checkout() {
             });
         }
 
-        // Clear cart after successful payment
+        // 🔹 Clear cart only if everything succeeded
         clearCart();
         toggleCart();
 
-        showToast('Payment successful! Order confirmed.', 'success');
+        showToast('✅ Payment successful! Order confirmed.', 'success');
     } catch (error) {
         console.error('Checkout failed:', error);
-        showToast('Payment failed. Please try again.', 'error');
+        showToast('❌ Payment failed. Transaction cancelled.', 'error');
     }
 }
+
 
 async function uploadToImgBB(file) {
     const apiKey = "84a54b2c03a399edaad3c48b3184201a";
@@ -1434,6 +1432,7 @@ window.addEventListener('click', function(event) {
         }
     });
 });
+
 
 
 
