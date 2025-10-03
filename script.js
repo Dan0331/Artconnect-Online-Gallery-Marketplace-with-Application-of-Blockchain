@@ -191,10 +191,15 @@ async function connectWallet() {
     }
 
     try {
-        const sepoliaChainId = "0xaa36a7"; // ✅ Sepolia chain ID
+        const sepoliaChainId = "0xaa36a7"; // Sepolia chain ID
         const accounts = await window.ethereum.request({
             method: "eth_requestAccounts"
         });
+
+        if (!accounts.length) {
+            showToast("No accounts found", "error");
+            return;
+        }
 
         walletAddress = accounts[0];
         walletConnected = true;
@@ -211,7 +216,6 @@ async function connectWallet() {
                 });
                 showToast("Switched to Sepolia Testnet", "success");
             } catch (switchError) {
-                // Error 4902 = chain not added
                 if (switchError.code === 4902) {
                     try {
                         await window.ethereum.request({
@@ -232,25 +236,35 @@ async function connectWallet() {
                     } catch (addError) {
                         console.error("Failed to add Sepolia:", addError);
                         showToast("Please add Sepolia network manually in MetaMask.", "error");
-                        return;
+                        return; // 🔴 stop execution
                     }
                 } else {
                     console.error("Failed to switch network:", switchError);
                     showToast("Please switch to Sepolia manually in MetaMask.", "error");
-                    return;
+                    return; // 🔴 stop execution
                 }
             }
         }
 
+        // ✅ Only reaches here if connected AND on Sepolia
         showToast("Wallet connected successfully!", "success");
+
+        // Listeners
+        window.ethereum.on("accountsChanged", handleAccountsChanged);
+        window.ethereum.on("chainChanged", handleChainChanged);
+
+        updateWalletUI();
         return walletAddress;
 
     } catch (error) {
         console.error("Wallet connection failed:", error);
-        showToast("Wallet connection failed", "error");
+        if (error.code === 4001) {
+            showToast("Connection rejected by user", "error");
+        } else {
+            showToast("Wallet connection failed", "error");
+        }
     }
 }
-
 
 function isValidEthereumAddress(address) {
     return /^0x[a-fA-F0-9]{40}$/.test(address);
@@ -258,13 +272,11 @@ function isValidEthereumAddress(address) {
 
 function handleAccountsChanged(accounts) {
     if (accounts.length === 0) {
-        // User disconnected wallet
         walletConnected = false;
         walletAddress = null;
         updateWalletUI();
         showToast('Wallet disconnected', 'warning');
     } else {
-        // User switched accounts
         if (isValidEthereumAddress(accounts[0])) {
             walletAddress = accounts[0];
             updateWalletUI();
@@ -274,16 +286,19 @@ function handleAccountsChanged(accounts) {
 }
 
 function handleChainChanged(chainId) {
-    const allowedChains = ['0xaa36a7']; // '0x1', '0x5', 
-    if (!allowedChains.includes(chainId)) {
-        showToast('Please switch to Sepolia network', 'error');
+    const sepoliaChainId = "0xaa36a7";
+    if (chainId !== sepoliaChainId) {
+        showToast("Wrong network! Please switch to Sepolia", "error");
         walletConnected = false;
         walletAddress = null;
         updateWalletUI();
     } else {
-        showToast('Network switched to Sepolia', 'success');
+        showToast("Network switched to Sepolia", "success");
+        walletConnected = true;
+        updateWalletUI();
     }
 }
+
 
 // save info in db
 async function saveUserToFirestore(walletAddress) {
@@ -1410,5 +1425,6 @@ window.addEventListener('click', function(event) {
         }
     });
 });
+
 
 
