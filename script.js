@@ -741,73 +741,58 @@ async function checkout() {
     const platformWallet = '0xcE9D5CC73015c2b5c0A2b83af210cA53117AE430'; // Platform wallet
 
     try {
-        showToast('Processing payment...', 'warning');
+    showToast('Processing payment...', 'warning');
 
-        for (let item of cart) {
-            if (!item.sellerId || item.sellerId === "unknown") {
-                console.warn(`Missing sellerId for artwork: ${item.title}`);
-                continue;
-            }
-
-            const timestamp = new Date();
-            const totalPrice = item.price * item.quantity;
-
-            // Split: 90% seller, 10% platform
-            const sellerAmount = totalPrice * 0.9;
-            const platformAmount = totalPrice * 0.1;
-
-            // 🔹 Attempt payments (MetaMask will pop up here)
-            let txSeller, txPlatform;
-            try {
-                txSeller = await sendPayment(item.sellerId, sellerAmount);
-                txPlatform = await sendPayment(platformWallet, platformAmount);
-            } catch (paymentError) {
-                showToast("❌ Payment failed: " + paymentError.message, "error");
-                throw paymentError; // 🔹 Stop checkout immediately
-            }
-
-            // 🔹 If payments succeeded → Firestore writes
-            await addDoc(collection(db, "users", walletAddress, "artBought"), {
-                artwork: {
-                    id: item.id,
-                    title: item.title,
-                    imageUrl: item.imageUrl
-                },
-                price: item.price,
-                quantity: item.quantity,
-                sellerId: item.sellerId,
-                buyerId: walletAddress,
-                purchasedAt: timestamp,
-                txSeller,
-                txPlatform,
-                status: "completed"
-            });
-
-            await addDoc(collection(db, "users", item.sellerId, "artSold"), {
-                artwork: {
-                    id: item.id,
-                    title: item.title,
-                    imageUrl: item.imageUrl
-                },
-                price: item.price,
-                quantity: item.quantity,
-                buyerId: walletAddress,
-                sellerId: item.sellerId,
-                soldAt: timestamp,
-                txSeller,
-                status: "completed"
-            });
+    for (let item of cart) {
+        if (!item.sellerId || item.sellerId === "unknown") {
+            console.warn(`Missing sellerId for artwork: ${item.title}`);
+            continue;
         }
 
-        // 🔹 Clear cart only if everything succeeded
-        clearCart();
-        toggleCart();
+        const timestamp = new Date();
+        const totalPrice = item.price * item.quantity;
 
-        showToast('✅ Payment successful! Order confirmed.', 'success');
-    } catch (error) {
-        console.error('Checkout failed:', error);
-        showToast('❌ Payment failed. Transaction cancelled.', 'error');
+        const sellerAmount = totalPrice * 0.9;
+        const platformAmount = totalPrice * 0.1;
+
+        // ✅ Must await both payments
+        const txSeller = await sendPayment(item.sellerId, sellerAmount);
+        const txPlatform = await sendPayment(platformWallet, platformAmount);
+
+        // ✅ Write to Firestore only if both succeed
+        await addDoc(collection(db, "users", walletAddress, "artBought"), {
+            artwork: { id: item.id, title: item.title, imageUrl: item.imageUrl },
+            price: item.price,
+            quantity: item.quantity,
+            sellerId: item.sellerId,
+            buyerId: walletAddress,
+            purchasedAt: timestamp,
+            txSeller,
+            txPlatform,
+            status: "completed"
+        });
+
+        await addDoc(collection(db, "users", item.sellerId, "artSold"), {
+            artwork: { id: item.id, title: item.title, imageUrl: item.imageUrl },
+            price: item.price,
+            quantity: item.quantity,
+            buyerId: walletAddress,
+            sellerId: item.sellerId,
+            soldAt: timestamp,
+            txSeller,
+            status: "completed"
+        });
     }
+
+    // ✅ Clear cart only after all payments succeed
+    clearCart();
+    toggleCart();
+    showToast('✅ Payment successful! Order confirmed.', 'success');
+
+} catch (error) {
+    console.error('Checkout failed:', error);
+    showToast('❌ Payment failed. Transaction cancelled.', 'error');
+}
 }
 
 
@@ -1404,4 +1389,5 @@ window.addEventListener('click', function(event) {
         }
     });
 });
+
 
