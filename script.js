@@ -354,21 +354,22 @@ async function sendPayment(toAddress, amount) {
     }
 
     try {
-        const amountInWei = (amount * 1e18).toString(16);
+        // Convert amount (ETH) → Wei using BigInt (safest way)
+        const amountInWei = '0x' + BigInt(Math.floor(amount * 1e18)).toString(16);
 
-        // send transaction
+        // Send transaction
         const txHash = await window.ethereum.request({
             method: 'eth_sendTransaction',
             params: [{
                 from: walletAddress,
                 to: toAddress,
-                value: '0x' + amountInWei
+                value: amountInWei
             }]
         });
 
         showToast('Transaction sent. Waiting for confirmation...', 'warning');
 
-        // wait for receipt
+        // Wait for receipt
         let receipt = null;
         while (!receipt) {
             receipt = await window.ethereum.request({
@@ -382,6 +383,7 @@ async function sendPayment(toAddress, amount) {
         }
 
         if (receipt.status === '0x1') {
+            showToast('Transaction confirmed successfully!', 'success');
             return txHash; // success
         } else {
             throw new Error("Transaction failed on Sepolia");
@@ -389,9 +391,11 @@ async function sendPayment(toAddress, amount) {
 
     } catch (error) {
         console.error("Payment failed:", error);
+        showToast("Payment failed: " + error.message, "error");
         throw error;
     }
 }
+
 
 
 
@@ -1399,3 +1403,4 @@ window.addEventListener('click', function(event) {
         }
     });
 });
+
