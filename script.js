@@ -1,81 +1,81 @@
 // Sample artwork data
-const artworkData = [
-    {
-        id: 1,
-        title: "Ethereal Dreams",
-        artist: "Maya Chen",
-        description: "A mesmerizing blend of digital artistry and traditional painting techniques, exploring the boundaries between reality and dreams.",
-        price: 0.85,
-        imageUrl: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=500&h=400&fit=crop",
-        category: "Abstract",
-        dimensions: "24\" x 36\"",
-        year: 2024,
-        inStock: true
-    },
-    {
-        id: 2,
-        title: "Urban Solitude",
-        artist: "Marcus Rodriguez",
-        description: "A powerful commentary on modern city life, capturing the isolation within the bustling urban landscape.",
-        price: 1.2,
-        imageUrl: "https://images.unsplash.com/photo-1536431311719-398b6704d4cc?w=500&h=400&fit=crop",
-        category: "Urban",
-        dimensions: "30\" x 40\"",
-        year: 2023,
-        inStock: true
-    },
-    {
-        id: 3,
-        title: "Mystic Waters",
-        artist: "Elena Kowalski",
-        description: "An enchanting seascape that transports viewers to a mystical underwater realm filled with wonder and tranquility.",
-        price: 0.95,
-        imageUrl: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=500&h=400&fit=crop",
-        category: "Seascape",
-        dimensions: "28\" x 22\"",
-        year: 2024,
-        inStock: false
-    },
-    {
-        id: 4,
-        title: "Golden Hour Valley",
-        artist: "James Thompson",
-        description: "A breathtaking landscape capturing the magical moment when golden sunlight bathes a serene valley in warm hues.",
-        price: 0.75,
-        imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500&h=400&fit=crop",
-        category: "Landscape",
-        dimensions: "32\" x 24\"",
-        year: 2023,
-        inStock: true
-    },
-    {
-        id: 5,
-        title: "Digital Renaissance",
-        artist: "Aria Nakamura",
-        description: "A modern interpretation of classical portraiture, blending Renaissance techniques with contemporary digital art.",
-        price: 1.5,
-        imageUrl: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&h=400&fit=crop",
-        category: "Portrait",
-        dimensions: "20\" x 24\"",
-        year: 2024,
-        inStock: true
-    },
-    {
-        id: 6,
-        title: "Neon Nights",
-        artist: "Alex Rivera",
-        description: "A vibrant exploration of cyberpunk aesthetics, featuring neon-lit cityscapes and futuristic architecture.",
-        price: 1.1,
-        imageUrl: "/images/cyberpunk.jpg",
-        category: "Abstract",
-        dimensions: "36\" x 24\"",
-        year: 2024,
-        inStock: true
-    }
-];
+// const artworkData = [
+//     {
+//         id: 1,
+//         title: "Ethereal Dreams",
+//         artist: "Maya Chen",
+//         description: "A mesmerizing blend of digital artistry and traditional painting techniques, exploring the boundaries between reality and dreams.",
+//         price: 0.85,
+//         imageUrl: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=500&h=400&fit=crop",
+//         category: "Abstract",
+//         dimensions: "24\" x 36\"",
+//         year: 2024,
+//         inStock: true
+//     },
+//     {
+//         id: 2,
+//         title: "Urban Solitude",
+//         artist: "Marcus Rodriguez",
+//         description: "A powerful commentary on modern city life, capturing the isolation within the bustling urban landscape.",
+//         price: 1.2,
+//         imageUrl: "https://images.unsplash.com/photo-1536431311719-398b6704d4cc?w=500&h=400&fit=crop",
+//         category: "Urban",
+//         dimensions: "30\" x 40\"",
+//         year: 2023,
+//         inStock: true
+//     },
+//     {
+//         id: 3,
+//         title: "Mystic Waters",
+//         artist: "Elena Kowalski",
+//         description: "An enchanting seascape that transports viewers to a mystical underwater realm filled with wonder and tranquility.",
+//         price: 0.95,
+//         imageUrl: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=500&h=400&fit=crop",
+//         category: "Seascape",
+//         dimensions: "28\" x 22\"",
+//         year: 2024,
+//         inStock: false
+//     },
+//     {
+//         id: 4,
+//         title: "Golden Hour Valley",
+//         artist: "James Thompson",
+//         description: "A breathtaking landscape capturing the magical moment when golden sunlight bathes a serene valley in warm hues.",
+//         price: 0.75,
+//         imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500&h=400&fit=crop",
+//         category: "Landscape",
+//         dimensions: "32\" x 24\"",
+//         year: 2023,
+//         inStock: true
+//     },
+//     {
+//         id: 5,
+//         title: "Digital Renaissance",
+//         artist: "Aria Nakamura",
+//         description: "A modern interpretation of classical portraiture, blending Renaissance techniques with contemporary digital art.",
+//         price: 1.5,
+//         imageUrl: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&h=400&fit=crop",
+//         category: "Portrait",
+//         dimensions: "20\" x 24\"",
+//         year: 2024,
+//         inStock: true
+//     },
+//     {
+//         id: 6,
+//         title: "Neon Nights",
+//         artist: "Alex Rivera",
+//         description: "A vibrant exploration of cyberpunk aesthetics, featuring neon-lit cityscapes and futuristic architecture.",
+//         price: 1.1,
+//         imageUrl: "/images/cyberpunk.jpg",
+//         category: "Abstract",
+//         dimensions: "36\" x 24\"",
+//         year: 2024,
+//         inStock: true
+//     }
+// ];
 
 // Global state
-let currentArtworks = [...artworkData];
+let currentArtworks = [];//...artworkData];
 let cart = JSON.parse(localStorage.getItem('artconnect_cart') || '[]');
 let walletConnected = false;
 let walletAddress = null;
@@ -83,68 +83,68 @@ let submittedArtworks = JSON.parse(localStorage.getItem('user_submitted_artwork'
 let isAdmin = false;
 
 // Artist profiles data
-const artistProfiles = [
-    {
-        id: 1,
-        name: "Maya Chen",
-        avatar: "MC",
-        bio: "Digital artist specializing in surreal landscapes and abstract compositions. My work explores the intersection of nature and technology.",
-        artworkCount: 12,
-        totalSales: 45.2,
-        joinDate: "2023",
-        portfolio: [1] // artwork IDs
-    },
-    {
-        id: 2,
-        name: "Marcus Rodriguez",
-        avatar: "MR",
-        bio: "Contemporary artist focused on urban culture and street art. Each piece tells a story of modern city life.",
-        artworkCount: 8,
-        totalSales: 32.1,
-        joinDate: "2023",
-        portfolio: [2] // artwork IDs
-    },
-    {
-        id: 3,
-        name: "Elena Kowalski",
-        avatar: "EK",
-        bio: "Fine art photographer turned digital creator. I capture moments and transform them into timeless NFT artworks.",
-        artworkCount: 15,
-        totalSales: 67.8,
-        joinDate: "2022",
-        portfolio: [3] // artwork IDs
-    },
-    {
-        id: 4,
-        name: "James Thompson",
-        avatar: "JT",
-        bio: "Landscape photographer and digital artist capturing the beauty of natural environments.",
-        artworkCount: 10,
-        totalSales: 28.5,
-        joinDate: "2023",
-        portfolio: [4] // artwork IDs
-    },
-    {
-        id: 5,
-        name: "Aria Nakamura",
-        avatar: "AN",
-        bio: "Modern interpretation artist blending Renaissance techniques with contemporary digital art.",
-        artworkCount: 18,
-        totalSales: 52.3,
-        joinDate: "2022",
-        portfolio: [5] // artwork IDs
-    },
-    {
-        id: 6,
-        name: "Alex Rivera",
-        avatar: "AR",
-        bio: "Cyberpunk and futuristic digital artist exploring neon-lit cityscapes and advanced technology themes.",
-        artworkCount: 14,
-        totalSales: 41.7,
-        joinDate: "2023",
-        portfolio: [6] // artwork IDs
-    }
-];
+// const artistProfiles = [
+//     {
+//         id: 1,
+//         name: "Maya Chen",
+//         avatar: "MC",
+//         bio: "Digital artist specializing in surreal landscapes and abstract compositions. My work explores the intersection of nature and technology.",
+//         artworkCount: 12,
+//         totalSales: 45.2,
+//         joinDate: "2023",
+//         portfolio: [1] // artwork IDs
+//     },
+//     {
+//         id: 2,
+//         name: "Marcus Rodriguez",
+//         avatar: "MR",
+//         bio: "Contemporary artist focused on urban culture and street art. Each piece tells a story of modern city life.",
+//         artworkCount: 8,
+//         totalSales: 32.1,
+//         joinDate: "2023",
+//         portfolio: [2] // artwork IDs
+//     },
+//     {
+//         id: 3,
+//         name: "Elena Kowalski",
+//         avatar: "EK",
+//         bio: "Fine art photographer turned digital creator. I capture moments and transform them into timeless NFT artworks.",
+//         artworkCount: 15,
+//         totalSales: 67.8,
+//         joinDate: "2022",
+//         portfolio: [3] // artwork IDs
+//     },
+//     {
+//         id: 4,
+//         name: "James Thompson",
+//         avatar: "JT",
+//         bio: "Landscape photographer and digital artist capturing the beauty of natural environments.",
+//         artworkCount: 10,
+//         totalSales: 28.5,
+//         joinDate: "2023",
+//         portfolio: [4] // artwork IDs
+//     },
+//     {
+//         id: 5,
+//         name: "Aria Nakamura",
+//         avatar: "AN",
+//         bio: "Modern interpretation artist blending Renaissance techniques with contemporary digital art.",
+//         artworkCount: 18,
+//         totalSales: 52.3,
+//         joinDate: "2022",
+//         portfolio: [5] // artwork IDs
+//     },
+//     {
+//         id: 6,
+//         name: "Alex Rivera",
+//         avatar: "AR",
+//         bio: "Cyberpunk and futuristic digital artist exploring neon-lit cityscapes and advanced technology themes.",
+//         artworkCount: 14,
+//         totalSales: 41.7,
+//         joinDate: "2023",
+//         portfolio: [6] // artwork IDs
+//     }
+// ];
 
 // Enhanced artwork data with blockchain details
 const blockchainDetails = {
@@ -182,63 +182,67 @@ const blockchainDetails = {
     }
 };
 
-// Web3 and MetaMask functionality
-async function connectWallet() {
-    if (typeof window.ethereum === 'undefined') {
-        showToast('Please install MetaMask to use this feature', 'error');
-        return;
-    }
 
-    try {
-        // Check if connected to Ethereum network
-        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+// Web3 and MetaMask functionality & add in db 
+async function connectWallet() { 
+    if (typeof window.ethereum === 'undefined') { 
+        showToast('Please install MetaMask to use this feature', 'error'); 
+        return; 
+    } 
+    
+    try { 
+        // Check if connected to Ethereum network 
+        const chainId = await window.ethereum.request({ method: 'eth_chainId' }); 
         
-        // Ethereum Mainnet: 0x1, Goerli: 0x5, Sepolia: 0xaa36a7
-        const allowedChains = ['0x1', '0x5', '0xaa36a7'];
+        // Ethereum Mainnet: 0x1, Goerli: 0x5, Sepolia: 0xaa36a7 
+        const allowedChains = ['0xaa36a7']; // '0x1', '0x5', 
         
-        if (!allowedChains.includes(chainId)) {
-            showToast('Please switch to Ethereum network in MetaMask', 'error');
-            try {
-                // Request to switch to Ethereum mainnet
-                await window.ethereum.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: '0x1' }]
-                });
-            } catch (switchError) {
-                console.error('Failed to switch network:', switchError);
-                showToast('Please manually switch to Ethereum network in MetaMask', 'error');
-                return;
-            }
-        }
+        if (!allowedChains.includes(chainId)) { 
+            showToast('Please switch to Sepolia network in MetaMask', 'error'); 
+            try { 
+                // Request to switch to Ethereum mainnet 
+                await window.ethereum.request({ 
+                    method: 'wallet_switchEthereumChain', 
+                    params: [{ chainId: '0x1' }] 
+                }); 
+            } catch (switchError) { 
+                console.error('Failed to switch network:', switchError); 
+                showToast('Please manually switch to Ethereum network in MetaMask', 'error'); 
+                return; 
+            } 
+        } 
+        
+        const accounts = await window.ethereum.request({ 
+            method: 'eth_requestAccounts' 
+        }); 
+        
+        if (accounts.length > 0) { 
+            // Validate that it's an Ethereum address 
+            if (!isValidEthereumAddress(accounts[0])) { 
+                showToast('Invalid Ethereum address detected', 'error'); 
+                return; 
+            } 
+            
+            walletAddress = accounts[0]; 
+            walletConnected = true; 
+            updateWalletUI(); 
+            showToast('Wallet connected successfully!', 'success'); 
+            
+            // Listen for account changes 
+            window.ethereum.on('accountsChanged', handleAccountsChanged); 
+            window.ethereum.on('chainChanged', handleChainChanged); 
 
-        const accounts = await window.ethereum.request({
-            method: 'eth_requestAccounts'
-        });
-        
-        if (accounts.length > 0) {
-            // Validate that it's an Ethereum address
-            if (!isValidEthereumAddress(accounts[0])) {
-                showToast('Invalid Ethereum address detected', 'error');
-                return;
-            }
-            
-            walletAddress = accounts[0];
-            walletConnected = true;
-            updateWalletUI();
-            showToast('Ethereum wallet connected successfully!', 'success');
-            
-            // Listen for account changes
-            window.ethereum.on('accountsChanged', handleAccountsChanged);
-            window.ethereum.on('chainChanged', handleChainChanged);
-        }
-    } catch (error) {
-        console.error('Failed to connect wallet:', error);
-        if (error.code === 4001) {
-            showToast('Connection rejected by user', 'error');
-        } else {
-            showToast('Failed to connect Ethereum wallet', 'error');
-        }
-    }
+            // calls function to save user info in db 
+            await saveUserToFirestore(walletAddress); 
+        } 
+    } catch (error) { 
+        console.error('Failed to connect wallet:', error); 
+        if (error.code === 4001) { 
+            showToast('Connection rejected by user', 'error'); 
+        } else { 
+            showToast('Failed to connect Ethereum wallet', 'error'); 
+        } 
+    } 
 }
 
 function isValidEthereumAddress(address) {
@@ -263,68 +267,134 @@ function handleAccountsChanged(accounts) {
 }
 
 function handleChainChanged(chainId) {
-    const allowedChains = ['0x1', '0x5', '0xaa36a7'];
+    const allowedChains = ['0xaa36a7']; // '0x1', '0x5', 
     if (!allowedChains.includes(chainId)) {
-        showToast('Please switch to Ethereum network', 'error');
+        showToast('Please switch to Sepolia network', 'error');
         walletConnected = false;
         walletAddress = null;
         updateWalletUI();
     } else {
-        showToast('Network switched to Ethereum', 'success');
+        showToast('Network switched to Sepolia', 'success');
     }
 }
+
+// save info in db
+async function saveUserToFirestore(walletAddress) {
+    const userRef = doc(db, "users", walletAddress);
+    const snapshot = await getDoc(userRef);
+
+    if (!snapshot.exists()) {
+        await setDoc(userRef, {
+            walletAddress: walletAddress,
+            createdAt: new Date()
+        });
+        console.log("New user saved:", walletAddress);
+    } else {
+        console.log("User already exists:", walletAddress);
+    }
+}
+
 
 function updateWalletUI() {
     const walletBtn = document.getElementById('walletBtn');
     const walletWarning = document.getElementById('walletWarning');
     
     if (walletConnected) {
-        walletBtn.innerHTML = `<i class="fab fa-ethereum"></i> ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
+        walletBtn.innerHTML = `<i class="fas fa-wallet"></i> ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
         walletBtn.classList.add('connected');
         walletBtn.title = `Connected to Ethereum: ${walletAddress}`;
         if (walletWarning) walletWarning.style.display = 'none';
     } else {
-        walletBtn.innerHTML = '<i class="fab fa-ethereum"></i> Connect Ethereum Wallet';
+        walletBtn.innerHTML = '<i class="fas fa-wallet"></i> Connect Wallet';
         walletBtn.classList.remove('connected');
-        walletBtn.title = 'Connect your Ethereum wallet via MetaMask';
+        walletBtn.title = 'Connect your Ethereum wallet via MetaMask'
         if (walletWarning) walletWarning.style.display = 'block';
     }
 }
 
+// async function sendPayment(toAddress, amount) {
+//     if (!walletConnected) {
+//         throw new Error('Ethereum wallet not connected');
+//     }
+
+//     // Verify we're still on Ethereum network
+//     const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+//     const allowedChains = ['0xaa36a7']; // '0x1', '0x5', 
+    
+//     if (!allowedChains.includes(chainId)) {
+//         throw new Error('Please switch to Sepolia Testnet to complete payment');
+//     }
+
+//     try {
+//         const amountInWei = (amount * 1e18).toString(16);
+        
+//         const transactionHash = await window.ethereum.request({
+//             method: 'eth_sendTransaction',
+//             params: [{
+//                 from: walletAddress,
+//                 to: toAddress,
+//                 value: '0x' + amountInWei,
+//                 gas: '0x5208' // Standard gas limit for ETH transfer
+//             }]
+//         });
+        
+//         return transactionHash;
+//     } catch (error) {
+//         if (error.code === 4001) {
+//             throw new Error('Transaction rejected by user');
+//         }
+//         throw error;
+//     }
+// }
+
+
 async function sendPayment(toAddress, amount) {
     if (!walletConnected) {
-        throw new Error('Ethereum wallet not connected');
-    }
-
-    // Verify we're still on Ethereum network
-    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-    const allowedChains = ['0x1', '0x5', '0xaa36a7'];
-    
-    if (!allowedChains.includes(chainId)) {
-        throw new Error('Please switch to Ethereum network to complete payment');
+        throw new Error('Wallet not connected');
     }
 
     try {
         const amountInWei = (amount * 1e18).toString(16);
-        
-        const transactionHash = await window.ethereum.request({
+
+        // send transaction
+        const txHash = await window.ethereum.request({
             method: 'eth_sendTransaction',
             params: [{
                 from: walletAddress,
                 to: toAddress,
-                value: '0x' + amountInWei,
-                gas: '0x5208' // Standard gas limit for ETH transfer
+                value: '0x' + amountInWei
             }]
         });
-        
-        return transactionHash;
-    } catch (error) {
-        if (error.code === 4001) {
-            throw new Error('Transaction rejected by user');
+
+        showToast('Transaction sent. Waiting for confirmation...', 'warning');
+
+        // wait for receipt
+        let receipt = null;
+        while (!receipt) {
+            receipt = await window.ethereum.request({
+                method: 'eth_getTransactionReceipt',
+                params: [txHash]
+            });
+
+            if (!receipt) {
+                await new Promise(r => setTimeout(r, 3000)); // wait 3s before retry
+            }
         }
+
+        if (receipt.status === '0x1') {
+            return txHash; // success
+        } else {
+            throw new Error("Transaction failed on Sepolia");
+        }
+
+    } catch (error) {
+        console.error("Payment failed:", error);
         throw error;
     }
 }
+
+
+
 
 // Navigation functionality
 function showSection(sectionId) {
@@ -365,7 +435,7 @@ document.addEventListener('DOMContentLoaded', function() {
     updateCartUI();
     updateWalletUI();
     updateAdminStats();
-    
+
     // Check for admin access (demo: wallet address contains "admin")
     if (walletAddress && walletAddress.toLowerCase().includes('admin')) {
         isAdmin = true;
@@ -374,11 +444,51 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Artwork functionality
-function loadArtworks() {
-    // Combine original artworks with submitted ones
-    const allArtworks = [...artworkData, ...submittedArtworks];
-    currentArtworks = allArtworks;
-    renderArtworks(currentArtworks);
+async function loadArtworks() {
+    try {
+        // Fetch artworks from Firestore
+        const snapshot = await getDocs(collection(db, "artworks"));
+
+        submittedArtworks = []; // reset before reloading
+        snapshot.forEach(docSnap => {
+            const art = docSnap.data();
+            // Ensure each doc has an id (use Firestore's id if not present)
+            submittedArtworks.push({
+                id: art.id || docSnap.id,
+                ...art
+            });
+        });
+
+        // Save to localStorage for offline support
+        localStorage.setItem('user_submitted_artwork', JSON.stringify(submittedArtworks));
+
+        // Merge static demo + db artworks (optional)
+        //const combinedArtworks = [...artworkData, ...submittedArtworks];
+        //currentArtworks = combinedArtworks;
+
+        // If you want ONLY db artworks, comment out the line above and use this:
+        currentArtworks = submittedArtworks;
+
+        renderArtworks(currentArtworks);
+
+    } catch (error) {
+        console.error("Error loading artworks:", error);
+        showToast("Failed to load artworks from server", "error");
+    }
+
+}
+
+function getImageUrl(url) {
+    if (!url) return '';
+
+    // Check if it's a Google Drive link
+    if (url.includes("drive.google.com")) {
+        const match = url.match(/[-\w]{25,}/); // Extracts the file ID
+        if (match) {
+            return `https://drive.google.com/uc?export=view&id=${match[0]}`;
+        }
+    }
+    return url; // return original if not Drive
 }
 
 function renderArtworks(artworks) {
@@ -393,11 +503,11 @@ function renderArtworks(artworks) {
         `;
         return;
     }
-    
+
     artworkGrid.innerHTML = artworks.map(artwork => `
         <div class="artwork-card">
             <div class="artwork-image">
-                <img src="${artwork.imageUrl}" alt="${artwork.title}" loading="lazy">
+                <img src="${getImageUrl(artwork.imageUrl)}" alt="${artwork.title}" loading="lazy">
                 ${!artwork.inStock ? '<div class="stock-badge">Out of Stock</div>' : ''}
             </div>
             <div class="artwork-info">
@@ -408,14 +518,14 @@ function renderArtworks(artworks) {
                 <p class="artwork-meta">${artwork.category} • ${artwork.year} • ${artwork.dimensions}</p>
                 <p class="artwork-description">${artwork.description}</p>
                 <div class="artwork-footer">
-                    <span class="artwork-price">${artwork.price} ETH</span>
+                    <span class="artwork-price">${artwork.price} tETH</span>
                 </div>
                 <div class="artwork-actions">
                     <button class="btn btn-secondary" onclick="showArtworkDetail(${artwork.id})">
                         <i class="fas fa-eye"></i> View Details
                     </button>
                     <button class="btn btn-primary add-to-basket-btn" onclick="addToCart(${artwork.id})" ${!artwork.inStock ? 'disabled' : ''}>
-                        <i class="fas fa-shopping-basket"></i> ${artwork.inStock ? 'Add to Basket' : 'Out of Stock'}
+                        <i class="fas fa-shopping-basket"></i> ${artwork.inStock ? 'Add to Cart' : 'Out of Stock'}
                     </button>
                 </div>
                 <div class="artwork-status">
@@ -431,7 +541,7 @@ function filterArtworks() {
     const categoryFilter = document.getElementById('categoryFilter').value;
     const sortFilter = document.getElementById('sortFilter').value;
     
-    let filtered = [...artworkData, ...submittedArtworks];
+    let filtered = [...submittedArtworks]; //, ...artworkData];
     
     // Apply search filter
     if (searchTerm) {
@@ -468,14 +578,14 @@ function filterArtworks() {
 }
 
 function showArtworkDetail(artworkId) {
-    const artwork = [...artworkData, ...submittedArtworks].find(item => item.id === artworkId);
+    const artwork = [...submittedArtworks].find(item => item.id === artworkId); // , ...artworkData].find(item => item.id === artworkId);
     if (!artwork) return;
     
     const modal = document.getElementById('artworkModal');
     const detailContainer = document.getElementById('artworkDetail');
-    
+
     detailContainer.innerHTML = `
-        <img src="${artwork.imageUrl}" alt="${artwork.title}" class="artwork-detail-image">
+        <img src="${getImageUrl(artwork.imageUrl)}" alt="${artwork.title}" class="artwork-detail-image">
         <div class="artwork-detail-info">
             <h2>${artwork.title}</h2>
             <p class="artwork-detail-artist">by ${artwork.artist}</p>
@@ -489,7 +599,7 @@ function showArtworkDetail(artworkId) {
                 <span class="status-badge ${getArtworkStatus(artwork.id)}">${getArtworkStatusText(artwork.id)}</span>
             </div>
             <div class="artwork-detail-footer">
-                <span class="artwork-detail-price">${artwork.price} ETH</span>
+                <span class="artwork-detail-price">${artwork.price} tETH</span>
                 <div class="detail-actions">
                     <button class="btn btn-secondary" onclick="showArtistProfile('${artwork.artist}')">
                         <i class="fas fa-user"></i> View Artist
@@ -523,7 +633,7 @@ function closeArtworkModal() {
 
 // Cart functionality
 function addToCart(artworkId) {
-    const artwork = [...artworkData, ...submittedArtworks].find(item => item.id === artworkId);
+    const artwork = [...submittedArtworks].find(item => item.id === artworkId); // , ...artworkData].find(item => item.id === artworkId);
     if (!artwork || !artwork.inStock) return;
     
     const existingItem = cart.find(item => item.id === artworkId);
@@ -543,7 +653,7 @@ function addToCart(artworkId) {
     
     saveCart();
     updateCartUI();
-    showToast('NFT added to cart successfully!', 'success');
+    showToast('Added to cart successfully!', 'success');
 }
 
 function removeFromCart(artworkId) {
@@ -553,8 +663,6 @@ function removeFromCart(artworkId) {
     renderCartItems();
     showToast('Removed from cart', 'success');
 }
-
-// Quantity controls removed for NFTs - each NFT is unique
 
 function clearCart() {
     cart = [];
@@ -591,8 +699,8 @@ function renderCartItems() {
     if (cart.length === 0) {
         cartItems.innerHTML = `
             <div class="empty-cart">
-                <i class="fas fa-shopping-basket" style="font-size: 3rem; margin-bottom: 1rem; color: #94a3b8;"></i>
-                <h3>Your basket is empty</h3>
+                <i class="fas fa-shopping-cart" style="font-size: 3rem; margin-bottom: 1rem; color: #94a3b8;"></i>
+                <h3>Your cart is empty</h3>
                 <p>Add some artworks to get started</p>
             </div>
         `;
@@ -609,8 +717,7 @@ function renderCartItems() {
             <div class="cart-item-info">
                 <h4 class="cart-item-title">${item.title}</h4>
                 <p class="cart-item-artist">by ${item.artist}</p>
-                <p class="cart-item-price">${item.price} ETH</p>
-                <span class="nft-badge">Unique NFT</span>
+                <p class="cart-item-price">${item.price} tETH</p>
             </div>
             <div class="cart-item-actions">
                 <button class="remove-btn" onclick="removeFromCart(${item.id})">Remove</button>
@@ -624,37 +731,106 @@ async function checkout() {
         showToast('Your cart is empty', 'error');
         return;
     }
-    
-    if (!walletConnected) {
+
+    if (!walletConnected || !walletAddress) {
         showToast('Please connect your MetaMask wallet first', 'error');
         return;
     }
-    
-    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const storeWalletAddress = '0x742d35Cc6686C59fCC3e544961fcdeEeC4d91dc3';
-    
+
+    const platformWallet = '0xcE9D5CC73015c2b5c0A2b83af210cA53117AE430'; // default platform wallet
+
     try {
         showToast('Processing payment...', 'warning');
-        const txHash = await sendPayment(storeWalletAddress, total);
-        
+
+        for (let item of cart) {
+            if (!item.sellerId || item.sellerId === "unknown") {
+                console.warn(`Missing sellerId for artwork: ${item.title}`);
+                continue;
+            }
+
+            const timestamp = new Date();
+            const totalPrice = item.price * item.quantity;
+
+            // Split: 90% seller, 10% platform
+            const sellerAmount = totalPrice * 0.9;
+            const platformAmount = totalPrice * 0.1;
+
+            // Pay seller
+            const txSeller = await sendPayment(item.sellerId, sellerAmount);
+
+            // Pay platform fee
+            const txPlatform = await sendPayment(platformWallet, platformAmount);
+
+            // Save under buyer -> artBought
+            await addDoc(collection(db, "users", walletAddress, "artBought"), {
+                artwork: {
+                    id: item.id,
+                    title: item.title,
+                    imageUrl: item.imageUrl
+                },
+                price: item.price,
+                quantity: item.quantity,
+                sellerId: item.sellerId,
+                buyerId: walletAddress,
+                purchasedAt: timestamp,
+                txSeller,
+                txPlatform,
+                status: "completed"
+            });
+
+            // Save under seller -> artSold
+            await addDoc(collection(db, "users", item.sellerId, "artSold"), {
+                artwork: {
+                    id: item.id,
+                    title: item.title,
+                    imageUrl: item.imageUrl
+                },
+                price: item.price,
+                quantity: item.quantity,
+                buyerId: walletAddress,
+                sellerId: item.sellerId,
+                soldAt: timestamp,
+                txSeller,
+                status: "completed"
+            });
+        }
+
         // Clear cart after successful payment
         clearCart();
         toggleCart();
-        
+
         showToast('Payment successful! Order confirmed.', 'success');
-        console.log('Transaction Hash:', txHash);
-        
     } catch (error) {
         console.error('Checkout failed:', error);
         showToast('Payment failed. Please try again.', 'error');
     }
 }
 
+async function uploadToImgBB(file) {
+    const apiKey = "84a54b2c03a399edaad3c48b3184201a";
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await response.json();
+    if (data.success) {
+        return data.data.url; // direct image URL
+    } else {
+        console.error("ImgBB upload failed:", data);
+        throw new Error("ImgBB upload failed");
+    }
+}
+
+
 // Submit artwork functionality
 async function submitArtwork(event) {
     event.preventDefault();
     
-    if (!walletConnected) {
+    if (!walletConnected || !walletAddress) {
         showToast('Please connect your wallet first', 'error');
         return;
     }
@@ -664,16 +840,28 @@ async function submitArtwork(event) {
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting...';
     
+
     try {
+        const fileInput = document.getElementById('artworkImage');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            showToast('Please upload an image', 'error');
+            return;
+        }
+
+        const imageUrl = await uploadToImgBB(file);
+
+
         const formData = {
             title: document.getElementById('artworkTitle').value,
             artist: document.getElementById('artistName').value,
             description: document.getElementById('artworkDescription').value,
             price: parseFloat(document.getElementById('artworkPrice').value),
-            imageUrl: document.getElementById('imageUrl').value,
             category: document.getElementById('artworkCategory').value,
             dimensions: document.getElementById('artworkDimensions').value,
-            year: parseInt(document.getElementById('artworkYear').value)
+            year: parseInt(document.getElementById('artworkYear').value),
+            imageUrl
         };
         
         // Validate form
@@ -687,6 +875,15 @@ async function submitArtwork(event) {
             inStock: true,
             submittedAt: new Date().toISOString()
         };
+
+        // 1. Save to Firestore under user's sellingArts
+        await addDoc(collection(db, "users", walletAddress, "sellingArts"), newArtwork);
+
+        // 2. Also save to global artworks collection
+        await addDoc(collection(db, "artworks"), {
+            ...newArtwork,
+            sellerId: walletAddress
+        });
         
         submittedArtworks.push(newArtwork);
         localStorage.setItem('user_submitted_artwork', JSON.stringify(submittedArtworks));
@@ -724,11 +921,9 @@ function validateSubmissionForm(formData) {
         showToast('Please enter a valid year', 'error');
         return false;
     }
-    
-    try {
-        new URL(formData.imageUrl);
-    } catch {
-        showToast('Please enter a valid image URL', 'error');
+
+    if (!formData.imageUrl.startsWith("http")) {
+        showToast('Invalid image link. Upload may have failed.', 'error');
         return false;
     }
     
@@ -815,29 +1010,115 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Artist Profile Functions
+// function loadArtists() {
+//     const artistsGrid = document.getElementById('artistsGrid');
+//     if (!artistsGrid) return;
+
+//     // Group artworks by artist from submittedArtworks
+//     const artistMap = {};
+//     submittedArtworks.forEach(art => {
+//         if (!artistMap[art.artist]) {
+//             artistMap[art.artist] = {
+//                 name: art.artist,
+//                 avatar: art.artist.charAt(0).toUpperCase(), // first letter
+//                 bio: art.bio || "This artist has not added a bio yet.",
+//                 artworks: []
+//             };
+//         }
+//         artistMap[art.artist].artworks.push(art);
+//     });
+
+//     const artists = Object.values(artistMap);
+
+//     if (artists.length === 0) {
+//         artistsGrid.innerHTML = `<p>No artists found</p>`;
+//         return;
+//     }
+    
+//     artistsGrid.innerHTML = artists.map(artist => `
+//         <div class="artist-card" onclick="showArtistProfile('${artist.name}')">
+//             <div class="artist-avatar-large">
+//                 ${artist.avatar}
+//             </div>
+//             <div class="artist-info">
+//                 <h3 class="artist-name">${artist.name}</h3>
+//                 <p class="artist-bio">${artist.bio}</p>
+//                 <div class="artist-stats">
+//                     <div class="stat">
+//                         <span class="stat-number">${artist.artworkCount}</span>
+//                         <span class="stat-label">Artworks</span>
+//                     </div>
+//                     <div class="stat">
+//                         <span class="stat-number">${artist.totalSales}</span>
+//                         <span class="stat-label">ETH Sales</span>
+//                     </div>
+//                     <div class="stat">
+//                         <span class="stat-number">${artist.joinDate}</span>
+//                         <span class="stat-label">Joined</span>
+//                     </div>
+//                 </div>
+//             </div>
+//         </div>
+//     `).join('');
+// }
+
 function loadArtists() {
     const artistsGrid = document.getElementById('artistsGrid');
     if (!artistsGrid) return;
-    
-    artistsGrid.innerHTML = artistProfiles.map(artist => `
+
+    // Group artworks by artist from submittedArtworks
+    const artistMap = {};
+    submittedArtworks.forEach(art => {
+        if (!artistMap[art.artist]) {
+            artistMap[art.artist] = {
+                name: art.artist,
+                avatar: art.artist.charAt(0).toUpperCase(), // first letter
+                bio: art.bio || "This artist has not added a bio yet.",
+                artworks: [],
+                totalSales: 0,
+                joinDate: null
+            };
+        }
+
+        // Add artwork
+        artistMap[art.artist].artworks.push(art);
+
+        // Add to sales sum
+        artistMap[art.artist].totalSales += parseFloat(art.price) || 0;
+
+        // Track earliest join date
+        if (art.submittedAt) {
+            const date = new Date(art.submittedAt);
+            if (!artistMap[art.artist].joinDate || date < new Date(artistMap[art.artist].joinDate)) {
+                artistMap[art.artist].joinDate = date;
+            }
+        }
+    });
+
+    const artists = Object.values(artistMap);
+
+    if (artists.length === 0) {
+        artistsGrid.innerHTML = `<p>No artists found</p>`;
+        return;
+    }
+
+    artistsGrid.innerHTML = artists.map(artist => `
         <div class="artist-card" onclick="showArtistProfile('${artist.name}')">
-            <div class="artist-avatar-large">
-                ${artist.avatar}
-            </div>
+            <div class="artist-avatar-large">${artist.avatar}</div>
             <div class="artist-info">
                 <h3 class="artist-name">${artist.name}</h3>
                 <p class="artist-bio">${artist.bio}</p>
                 <div class="artist-stats">
                     <div class="stat">
-                        <span class="stat-number">${artist.artworkCount}</span>
+                        <span class="stat-number">${artist.artworks.length}</span>
                         <span class="stat-label">Artworks</span>
                     </div>
                     <div class="stat">
-                        <span class="stat-number">${artist.totalSales}</span>
-                        <span class="stat-label">ETH Sales</span>
+                        <span class="stat-number">${artist.totalSales.toFixed(2)}</span>
+                        <span class="stat-label">tETH Sales</span>
                     </div>
                     <div class="stat">
-                        <span class="stat-number">${artist.joinDate}</span>
+                        <span class="stat-number">${artist.joinDate ? artist.joinDate.getFullYear() : "—"}</span>
                         <span class="stat-label">Joined</span>
                     </div>
                 </div>
@@ -846,36 +1127,40 @@ function loadArtists() {
     `).join('');
 }
 
+
 function showArtistProfile(artistName) {
-    const artist = artistProfiles.find(a => a.name === artistName);
-    if (!artist) return;
-    
+    const artistArtworks = submittedArtworks.filter(artwork => artwork.artist === artistName);
+    if (artistArtworks.length === 0) return;
+
+    // Calculate stats
+    const totalSales = artistArtworks.reduce((sum, art) => sum + (parseFloat(art.price) || 0), 0);
+    const joinDate = artistArtworks.reduce((earliest, art) => {
+        if (!art.submittedAt) return earliest;
+        const date = new Date(art.submittedAt);
+        return !earliest || date < earliest ? date : earliest;
+    }, null);
+
     const modal = document.getElementById('artistModal');
     const profileContainer = document.getElementById('artistProfile');
-    
-    // Get artist's artworks
-    const artistArtworks = [...artworkData, ...submittedArtworks].filter(artwork => 
-        artwork.artist === artistName
-    );
-    
+
     profileContainer.innerHTML = `
         <div class="artist-profile-header">
-            <div class="artist-avatar-xl">${artist.avatar}</div>
+            <div class="artist-avatar-xl">${artistName.charAt(0).toUpperCase()}</div>
             <div class="artist-profile-info">
-                <h2>${artist.name}</h2>
-                <p class="artist-profile-bio">${artist.bio}</p>
+                <h2>${artistName}</h2>
+                <p class="artist-profile-bio">This artist has not added a bio yet.</p>
                 <div class="artist-profile-stats">
                     <div class="profile-stat">
                         <i class="fas fa-palette"></i>
-                        <span>${artist.artworkCount} Artworks</span>
+                        <span>${artistArtworks.length} Artworks</span>
                     </div>
                     <div class="profile-stat">
                         <i class="fab fa-ethereum"></i>
-                        <span>${artist.totalSales} ETH Total Sales</span>
+                        <span>${totalSales.toFixed(2)} tETH Total Sales</span>
                     </div>
                     <div class="profile-stat">
                         <i class="fas fa-calendar"></i>
-                        <span>Joined ${artist.joinDate}</span>
+                        <span>Joined ${joinDate ? joinDate.getFullYear() : "—"}</span>
                     </div>
                 </div>
             </div>
@@ -886,19 +1171,21 @@ function showArtistProfile(artistName) {
             <div class="portfolio-grid">
                 ${artistArtworks.map(artwork => `
                     <div class="portfolio-item" onclick="showArtworkDetail(${artwork.id}); closeArtistModal();">
-                        <img src="${artwork.imageUrl}" alt="${artwork.title}">
+                        <img src="${getImageUrl(artwork.imageUrl)}" alt="${artwork.title}">
                         <div class="portfolio-overlay">
                             <h4>${artwork.title}</h4>
-                            <p>${artwork.price} ETH</p>
+                            <p>${artwork.price} tETH</p>
                         </div>
                     </div>
                 `).join('')}
             </div>
         </div>
     `;
-    
+
     modal.style.display = 'block';
 }
+
+
 
 function closeArtistModal() {
     document.getElementById('artistModal').style.display = 'none';
@@ -906,7 +1193,7 @@ function closeArtistModal() {
 
 // Blockchain Details Functions
 function showBlockchainDetails(artworkId) {
-    const artwork = [...artworkData, ...submittedArtworks].find(item => item.id === artworkId);
+    const artwork = [...submittedArtworks].find(item => item.id === artworkId); // , ...artworkData].find(item => item.id === artworkId);
     const blockchain = blockchainDetails[artworkId] || generateMockBlockchainData(artworkId);
     
     const modal = document.getElementById('blockchainModal');
@@ -1010,9 +1297,9 @@ function copyToClipboard(text) {
 
 // Admin Panel Functions
 function updateAdminStats() {
-    const totalArtworks = [...artworkData, ...submittedArtworks].length;
-    const totalArtists = new Set([...artworkData, ...submittedArtworks].map(a => a.artist)).size;
-    const totalVolume = [...artworkData, ...submittedArtworks].reduce((sum, a) => sum + a.price, 0);
+    const totalArtworks = [...submittedArtworks].length; // , ...artworkData].length;
+    const totalArtists = new Set([...submittedArtworks].map(a => a.artist)).size; // , ...artworkData].map(a => a.artist)).size;
+    const totalVolume = [...submittedArtworks].reduce((sum, a) => sum + a.price, 0); // , ...artworkData].reduce((sum, a) => sum + a.price, 0);
     const totalTransactions = Math.floor(Math.random() * 1000) + 500; // Mock data
     
     const elements = {

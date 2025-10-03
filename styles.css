@@ -309,7 +309,6 @@ body {
     font-size: 0.9rem;
 }
 
-/* Enhanced Button Styles */
 .btn-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -326,7 +325,6 @@ body {
     transform: translateY(-2px);
 }
 
-/* Enhanced Secondary Button */
 .btn-secondary {
     background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
     color: #4a5568;
@@ -347,6 +345,22 @@ body {
 .btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+/* Submit Form */
+.submit-form-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.wallet-warning {
+    background: #fef5e7;
+    border: 1px solid #f6ad55;
+    color: #c05621;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    text-align: center;
 }
 
 /* Submit Form */
@@ -653,7 +667,6 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    align-items: flex-end;
 }
 
 .nft-badge {

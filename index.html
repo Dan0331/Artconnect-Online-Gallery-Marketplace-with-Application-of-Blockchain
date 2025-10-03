@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ArtConnect - Premium Artwork Marketplace</title>
+    <title>ArtConnect - Premium NFT Marketplace</title>
     <meta name="description" content="Create, discover and trade NFT artworks with cryptocurrency payments via MetaMask">
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -42,7 +42,7 @@
         <section id="gallery" class="section active">
             <div class="container">
                 <div class="section-header">
-                    <h2>Artwork Marketplace</h2>
+                    <h2>NFT Marketplace</h2>
                     <p>Discover, collect and trade unique digital artworks as NFTs</p>
                 </div>
                 
@@ -118,10 +118,15 @@
                             <textarea id="artworkDescription" rows="4" required placeholder="Describe your artwork, inspiration, techniques used..."></textarea>
                         </div>
 
-                        <div class="form-group">
+                        <!-- <div class="form-group">
                             <label for="imageUrl">Image URL *</label>
                             <input type="url" id="imageUrl" required placeholder="https://example.com/your-artwork.jpg">
                             <small>Upload your image to a service like Imgur or Google Drive and paste the URL here</small>
+                        </div> -->
+
+                        <div class="form-group">
+                            <label for="artworkImage">Upload Artwork</label>
+                            <input type="file" id="artworkImage" accept="image/*" required>
                         </div>
 
                         <div class="form-row">
@@ -421,6 +426,41 @@
     <!-- Toast Notifications -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="script.js"></script>
+    <!-- Firebase SDKs -->
+    <script type="module">
+    // Import the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, orderBy } 
+        from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // Your Firebase config
+    const firebaseConfig = {
+        apiKey: "AIzaSyDHJQ1rMxRAEUIc71WOzp4tyK3hswvfSuY",
+        authDomain: "artconnectnft-24db1.firebaseapp.com",
+        projectId: "artconnectnft-24db1",
+        storageBucket: "artconnectnft-24db1.firebasestorage.app",
+        messagingSenderId: "718306679207",
+        appId: "1:718306679207:web:d6f277484bf9e0fb93fe82",
+        measurementId: "G-8M0RCH58VE"
+    };
+
+    // Init
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Expose globally so script.js can use
+    window.db = db;
+    window.setDoc = setDoc;
+    window.getDoc = getDoc;
+    window.doc = doc;
+    window.addDoc = addDoc;
+    window.collection = collection;
+    window.getDocs = getDocs;
+    window.query = query;
+    window.orderBy = orderBy;
+    </script>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
