@@ -184,86 +184,65 @@ const blockchainDetails = {
 
 
 // Web3 and MetaMask functionality & add in db 
-async function connectWallet() {
-    if (typeof window.ethereum === "undefined") {
-        showToast("MetaMask not found. Please install it.", "error");
-        return;
-    }
+async function connectWallet() { 
+    if (typeof window.ethereum === 'undefined') { 
+        showToast('Please install MetaMask to use this feature', 'error'); 
+        return; 
+    } 
+    
+    try { 
+        // Check if connected to Ethereum network 
+        const chainId = await window.ethereum.request({ method: 'eth_chainId' }); 
+        
+        // Ethereum Mainnet: 0x1, Goerli: 0x5, Sepolia: 0xaa36a7 
+        const allowedChains = ['0xaa36a7']; // '0x1', '0x5', 
+        
+        if (!allowedChains.includes(chainId)) { 
+            showToast('Please switch to Sepolia network in MetaMask', 'error'); 
+            try { 
+                // Request to switch to Ethereum mainnet 
+                await window.ethereum.request({ 
+                    method: 'wallet_switchEthereumChain', 
+                    params: [{ chainId: '0x1' }] 
+                }); 
+            } catch (switchError) { 
+                console.error('Failed to switch network:', switchError); 
+                showToast('Please manually switch to Ethereum network in MetaMask', 'error'); 
+                return; 
+            } 
+        } 
+        
+        const accounts = await window.ethereum.request({ 
+            method: 'eth_requestAccounts' 
+        }); 
+        
+        if (accounts.length > 0) { 
+            // Validate that it's an Ethereum address 
+            if (!isValidEthereumAddress(accounts[0])) { 
+                showToast('Invalid Ethereum address detected', 'error'); 
+                return; 
+            } 
+            
+            walletAddress = accounts[0]; 
+            walletConnected = true; 
+            updateWalletUI(); 
+            showToast('Wallet connected successfully!', 'success'); 
+            
+            // Listen for account changes 
+            window.ethereum.on('accountsChanged', handleAccountsChanged); 
+            window.ethereum.on('chainChanged', handleChainChanged); 
 
-    try {
-        const sepoliaChainId = "0xaa36a7"; // Sepolia chain ID
-        const accounts = await window.ethereum.request({
-            method: "eth_requestAccounts"
-        });
-
-        if (!accounts.length) {
-            showToast("No accounts found", "error");
-            return;
-        }
-
-        walletAddress = accounts[0];
-        walletConnected = true;
-
-        // Get current chain
-        let chainId = await window.ethereum.request({ method: "eth_chainId" });
-
-        // If not Sepolia, request switch
-        if (chainId !== sepoliaChainId) {
-            try {
-                await window.ethereum.request({
-                    method: "wallet_switchEthereumChain",
-                    params: [{ chainId: sepoliaChainId }]
-                });
-                showToast("Switched to Sepolia Testnet", "success");
-            } catch (switchError) {
-                if (switchError.code === 4902) {
-                    try {
-                        await window.ethereum.request({
-                            method: "wallet_addEthereumChain",
-                            params: [{
-                                chainId: sepoliaChainId,
-                                chainName: "Sepolia Test Network",
-                                rpcUrls: ["https://rpc.sepolia.org"],
-                                nativeCurrency: {
-                                    name: "SepoliaETH",
-                                    symbol: "ETH",
-                                    decimals: 18
-                                },
-                                blockExplorerUrls: ["https://sepolia.etherscan.io"]
-                            }]
-                        });
-                        showToast("Sepolia added and switched successfully!", "success");
-                    } catch (addError) {
-                        console.error("Failed to add Sepolia:", addError);
-                        showToast("Please add Sepolia network manually in MetaMask.", "error");
-                        return; // 🔴 stop execution
-                    }
-                } else {
-                    console.error("Failed to switch network:", switchError);
-                    showToast("Please switch to Sepolia manually in MetaMask.", "error");
-                    return; // 🔴 stop execution
-                }
-            }
-        }
-
-        // ✅ Only reaches here if connected AND on Sepolia
-        showToast("Wallet connected successfully!", "success");
-
-        // Listeners
-        window.ethereum.on("accountsChanged", handleAccountsChanged);
-        window.ethereum.on("chainChanged", handleChainChanged);
-
-        updateWalletUI();
-        return walletAddress;
-
-    } catch (error) {
-        console.error("Wallet connection failed:", error);
-        if (error.code === 4001) {
-            showToast("Connection rejected by user", "error");
-        } else {
-            showToast("Wallet connection failed", "error");
-        }
-    }
+            // calls function to save user info in db 
+            await saveUserToFirestore(walletAddress); 
+        } 
+    } catch (error) { 
+        console.error('Failed to connect wallet:', error); 
+        if (error.code === 4001) { 
+            showToast('Connection rejected by user', 'error'); 
+        } else { 
+            showToast('Failed to connect Ethereum wallet', 'error'); 
+        } 
+    } 
 }
 
 function isValidEthereumAddress(address) {
@@ -272,11 +251,13 @@ function isValidEthereumAddress(address) {
 
 function handleAccountsChanged(accounts) {
     if (accounts.length === 0) {
+        // User disconnected wallet
         walletConnected = false;
         walletAddress = null;
         updateWalletUI();
         showToast('Wallet disconnected', 'warning');
     } else {
+        // User switched accounts
         if (isValidEthereumAddress(accounts[0])) {
             walletAddress = accounts[0];
             updateWalletUI();
@@ -286,19 +267,16 @@ function handleAccountsChanged(accounts) {
 }
 
 function handleChainChanged(chainId) {
-    const sepoliaChainId = "0xaa36a7";
-    if (chainId !== sepoliaChainId) {
-        showToast("Wrong network! Please switch to Sepolia", "error");
+    const allowedChains = ['0xaa36a7']; // '0x1', '0x5', 
+    if (!allowedChains.includes(chainId)) {
+        showToast('Please switch to Sepolia network', 'error');
         walletConnected = false;
         walletAddress = null;
         updateWalletUI();
     } else {
-        showToast("Network switched to Sepolia", "success");
-        walletConnected = true;
-        updateWalletUI();
+        showToast('Network switched to Sepolia', 'success');
     }
 }
-
 
 // save info in db
 async function saveUserToFirestore(walletAddress) {
@@ -370,29 +348,27 @@ function updateWalletUI() {
 // }
 
 
-// ✅ Sepolia-safe sendPayment function
 async function sendPayment(toAddress, amount) {
     if (!walletConnected) {
         throw new Error('Wallet not connected');
     }
 
     try {
-        // Convert ETH → Wei safely
-        const amountInWei = '0x' + BigInt(Math.floor(amount * 1e18)).toString(16);
+        const amountInWei = (amount * 1e18).toString(16);
 
-        // 🔹 Request transaction via MetaMask
+        // send transaction
         const txHash = await window.ethereum.request({
             method: 'eth_sendTransaction',
             params: [{
                 from: walletAddress,
                 to: toAddress,
-                value: amountInWei
+                value: '0x' + amountInWei
             }]
         });
 
         showToast('Transaction sent. Waiting for confirmation...', 'warning');
 
-        // 🔹 Wait for confirmation
+        // wait for receipt
         let receipt = null;
         while (!receipt) {
             receipt = await window.ethereum.request({
@@ -405,23 +381,17 @@ async function sendPayment(toAddress, amount) {
             }
         }
 
-        // 🔹 Check status
         if (receipt.status === '0x1') {
-            showToast('Transaction confirmed!', 'success');
-            return txHash;
+            return txHash; // success
         } else {
             throw new Error("Transaction failed on Sepolia");
         }
 
     } catch (error) {
         console.error("Payment failed:", error);
-        // 🔹 IMPORTANT: stop checkout if MetaMask rejected
-        throw new Error(error.message || "Transaction was rejected");
+        throw error;
     }
 }
-
-
-
 
 
 
@@ -767,7 +737,7 @@ async function checkout() {
         return;
     }
 
-    const platformWallet = '0xcE9D5CC73015c2b5c0A2b83af210cA53117AE430'; // Platform wallet
+    const platformWallet = '0xcE9D5CC73015c2b5c0A2b83af210cA53117AE430'; // default platform wallet
 
     try {
         showToast('Processing payment...', 'warning');
@@ -785,17 +755,13 @@ async function checkout() {
             const sellerAmount = totalPrice * 0.9;
             const platformAmount = totalPrice * 0.1;
 
-            // 🔹 Payments (fail-safe)
-            let txSeller, txPlatform;
-            try {
-                txSeller = await sendPayment(item.sellerId, sellerAmount);
-                txPlatform = await sendPayment(platformWallet, platformAmount);
-            } catch (paymentError) {
-                showToast("❌ Payment failed: " + paymentError.message, "error");
-                throw paymentError; // 🔹 Stops Firestore writes & cart clearing
-            }
+            // Pay seller
+            const txSeller = await sendPayment(item.sellerId, sellerAmount);
 
-            // 🔹 Only if payments succeeded → Firestore writes
+            // Pay platform fee
+            const txPlatform = await sendPayment(platformWallet, platformAmount);
+
+            // Save under buyer -> artBought
             await addDoc(collection(db, "users", walletAddress, "artBought"), {
                 artwork: {
                     id: item.id,
@@ -812,6 +778,7 @@ async function checkout() {
                 status: "completed"
             });
 
+            // Save under seller -> artSold
             await addDoc(collection(db, "users", item.sellerId, "artSold"), {
                 artwork: {
                     id: item.id,
@@ -828,17 +795,16 @@ async function checkout() {
             });
         }
 
-        // 🔹 Clear cart only if everything succeeded
+        // Clear cart after successful payment
         clearCart();
         toggleCart();
 
-        showToast('✅ Payment successful! Order confirmed.', 'success');
+        showToast('Payment successful! Order confirmed.', 'success');
     } catch (error) {
         console.error('Checkout failed:', error);
-        showToast('❌ Payment failed. Transaction cancelled.', 'error');
+        showToast('Payment failed. Please try again.', 'error');
     }
 }
-
 
 async function uploadToImgBB(file) {
     const apiKey = "84a54b2c03a399edaad3c48b3184201a";
@@ -1433,9 +1399,3 @@ window.addEventListener('click', function(event) {
         }
     });
 });
-
-
-
-
-
-
