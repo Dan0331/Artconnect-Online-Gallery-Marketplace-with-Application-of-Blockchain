@@ -184,66 +184,73 @@ const blockchainDetails = {
 
 
 // Web3 and MetaMask functionality & add in db 
-async function connectWallet() { 
-    if (typeof window.ethereum === 'undefined') { 
-        showToast('Please install MetaMask to use this feature', 'error'); 
-        return; 
-    } 
-    
-    try { 
-        // Check if connected to Ethereum network 
-        const chainId = await window.ethereum.request({ method: 'eth_chainId' }); 
-        
-        // Ethereum Mainnet: 0x1, Goerli: 0x5, Sepolia: 0xaa36a7 
-        const allowedChains = ['0xaa36a7']; // '0x1', '0x5', 
-        
-        if (!allowedChains.includes(chainId)) { 
-            showToast('Please switch to Sepolia network in MetaMask', 'error'); 
-            try { 
-                // Request to switch to Ethereum mainnet 
-                await window.ethereum.request({ 
-                    method: 'wallet_switchEthereumChain', 
-                    params: [{ chainId: '0x1' }] 
-                }); 
-            } catch (switchError) { 
-                console.error('Failed to switch network:', switchError); 
-                showToast('Please manually switch to Ethereum network in MetaMask', 'error'); 
-                return; 
-            } 
-        } 
-        
-        const accounts = await window.ethereum.request({ 
-            method: 'eth_requestAccounts' 
-        }); 
-        
-        if (accounts.length > 0) { 
-            // Validate that it's an Ethereum address 
-            if (!isValidEthereumAddress(accounts[0])) { 
-                showToast('Invalid Ethereum address detected', 'error'); 
-                return; 
-            } 
-            
-            walletAddress = accounts[0]; 
-            walletConnected = true; 
-            updateWalletUI(); 
-            showToast('Wallet connected successfully!', 'success'); 
-            
-            // Listen for account changes 
-            window.ethereum.on('accountsChanged', handleAccountsChanged); 
-            window.ethereum.on('chainChanged', handleChainChanged); 
+async function connectWallet() {
+    if (typeof window.ethereum === "undefined") {
+        showToast("MetaMask not found. Please install it.", "error");
+        return;
+    }
 
-            // calls function to save user info in db 
-            await saveUserToFirestore(walletAddress); 
-        } 
-    } catch (error) { 
-        console.error('Failed to connect wallet:', error); 
-        if (error.code === 4001) { 
-            showToast('Connection rejected by user', 'error'); 
-        } else { 
-            showToast('Failed to connect Ethereum wallet', 'error'); 
-        } 
-    } 
+    try {
+        const sepoliaChainId = "0xaa36a7"; // ✅ Sepolia chain ID
+        const accounts = await window.ethereum.request({
+            method: "eth_requestAccounts"
+        });
+
+        walletAddress = accounts[0];
+        walletConnected = true;
+
+        // Get current chain
+        let chainId = await window.ethereum.request({ method: "eth_chainId" });
+
+        // If not Sepolia, request switch
+        if (chainId !== sepoliaChainId) {
+            try {
+                await window.ethereum.request({
+                    method: "wallet_switchEthereumChain",
+                    params: [{ chainId: sepoliaChainId }]
+                });
+                showToast("Switched to Sepolia Testnet", "success");
+            } catch (switchError) {
+                // Error 4902 = chain not added
+                if (switchError.code === 4902) {
+                    try {
+                        await window.ethereum.request({
+                            method: "wallet_addEthereumChain",
+                            params: [{
+                                chainId: sepoliaChainId,
+                                chainName: "Sepolia Test Network",
+                                rpcUrls: ["https://rpc.sepolia.org"],
+                                nativeCurrency: {
+                                    name: "SepoliaETH",
+                                    symbol: "ETH",
+                                    decimals: 18
+                                },
+                                blockExplorerUrls: ["https://sepolia.etherscan.io"]
+                            }]
+                        });
+                        showToast("Sepolia added and switched successfully!", "success");
+                    } catch (addError) {
+                        console.error("Failed to add Sepolia:", addError);
+                        showToast("Please add Sepolia network manually in MetaMask.", "error");
+                        return;
+                    }
+                } else {
+                    console.error("Failed to switch network:", switchError);
+                    showToast("Please switch to Sepolia manually in MetaMask.", "error");
+                    return;
+                }
+            }
+        }
+
+        showToast("Wallet connected successfully!", "success");
+        return walletAddress;
+
+    } catch (error) {
+        console.error("Wallet connection failed:", error);
+        showToast("Wallet connection failed", "error");
+    }
 }
+
 
 function isValidEthereumAddress(address) {
     return /^0x[a-fA-F0-9]{40}$/.test(address);
@@ -1403,4 +1410,5 @@ window.addEventListener('click', function(event) {
         }
     });
 });
+
 
