@@ -349,22 +349,23 @@ function updateWalletUI() {
 
 
 async function sendPayment(toAddress, amount) {
-    if (!walletConnected) {
-        throw new Error('Wallet not connected');
-    }
+    if (!walletConnected) throw new Error('Wallet not connected');
 
-    try {
-        const amountInWei = (amount * 1e18).toString(16);
+    // Convert amount (ETH) -> Wei safely using BigInt
+    const amountInWei = '0x' + BigInt(Math.floor(amount * 1e18)).toString(16);
 
-        // send transaction
-        const txHash = await window.ethereum.request({
-            method: 'eth_sendTransaction',
-            params: [{
-                from: walletAddress,
-                to: toAddress,
-                value: '0x' + amountInWei
-            }]
-        });
+    const txHash = await window.ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [{
+            from: walletAddress,
+            to: toAddress,
+            value: amountInWei
+        }]
+    });
+
+    return txHash;
+}
+
 
         showToast('Transaction sent. Waiting for confirmation...', 'warning');
 
@@ -1399,3 +1400,4 @@ window.addEventListener('click', function(event) {
         }
     });
 });
+
