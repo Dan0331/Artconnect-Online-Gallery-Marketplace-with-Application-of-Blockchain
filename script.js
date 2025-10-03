@@ -371,25 +371,23 @@ function updateWalletUI() {
 async function sendPayment(toAddress, amount) {
     if (!walletConnected) throw new Error('Wallet not connected');
 
-    // Convert amount (ETH) -> Wei safely using BigInt
-    const amountInWei = '0x' + BigInt(Math.floor(amount * 1e18)).toString(16);
+    try {
+        // Convert amount (ETH) -> Wei safely using BigInt
+        const amountInWei = '0x' + BigInt(Math.floor(amount * 1e18)).toString(16);
 
-    const txHash = await window.ethereum.request({
-        method: 'eth_sendTransaction',
-        params: [{
-            from: walletAddress,
-            to: toAddress,
-            value: amountInWei
-        }]
-    });
-
-    return txHash;
-}
-
+        // Send transaction
+        const txHash = await window.ethereum.request({
+            method: 'eth_sendTransaction',
+            params: [{
+                from: walletAddress,
+                to: toAddress,
+                value: amountInWei
+            }]
+        });
 
         showToast('Transaction sent. Waiting for confirmation...', 'warning');
 
-        // wait for receipt
+        // Poll until transaction receipt is available
         let receipt = null;
         while (!receipt) {
             receipt = await window.ethereum.request({
@@ -402,17 +400,21 @@ async function sendPayment(toAddress, amount) {
             }
         }
 
+        // Check if tx succeeded
         if (receipt.status === '0x1') {
-            return txHash; // success
+            showToast('Transaction confirmed!', 'success');
+            return txHash;
         } else {
             throw new Error("Transaction failed on Sepolia");
         }
 
     } catch (error) {
         console.error("Payment failed:", error);
+        showToast("Payment failed: " + error.message, "error");
         throw error;
     }
 }
+
 
 
 
@@ -1420,5 +1422,6 @@ window.addEventListener('click', function(event) {
         }
     });
 });
+
 
 
