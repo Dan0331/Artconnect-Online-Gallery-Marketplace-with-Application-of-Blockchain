@@ -372,48 +372,42 @@ function updateWalletUI() {
 
 // ✅ Sepolia-safe sendPayment function
 async function sendPayment(toAddress, amount) {
-    if (typeof window.ethereum === "undefined") {
-        throw new Error("MetaMask not found. Please install it.");
+    if (!walletConnected) {
+        throw new Error('Wallet not connected');
     }
-
-    // Make sure MetaMask is connected
-    const accounts = await window.ethereum.request({ method: "eth_accounts" });
-    if (!accounts || accounts.length === 0) {
-        throw new Error("No MetaMask account connected");
-    }
-    const from = accounts[0];
 
     try {
-        // Convert ETH → Wei
-        const amountInWei = "0x" + BigInt(Math.round(amount * 1e18)).toString(16);
+        // Convert ETH → Wei safely
+        const amountInWei = '0x' + BigInt(Math.floor(amount * 1e18)).toString(16);
 
-        // 🔹 Force MetaMask popup (this will fail if user rejects)
+        // 🔹 Request transaction via MetaMask
         const txHash = await window.ethereum.request({
-            method: "eth_sendTransaction",
+            method: 'eth_sendTransaction',
             params: [{
-                from: from,
+                from: walletAddress,
                 to: toAddress,
                 value: amountInWei
             }]
         });
 
-        showToast("Transaction sent. Waiting for confirmation...", "warning");
+        showToast('Transaction sent. Waiting for confirmation...', 'warning');
 
-        // 🔹 Wait until confirmed on Sepolia
+        // 🔹 Wait for confirmation
         let receipt = null;
         while (!receipt) {
             receipt = await window.ethereum.request({
-                method: "eth_getTransactionReceipt",
+                method: 'eth_getTransactionReceipt',
                 params: [txHash]
             });
 
             if (!receipt) {
-                await new Promise(r => setTimeout(r, 3000)); // retry after 3s
+                await new Promise(r => setTimeout(r, 3000)); // wait 3s before retry
             }
         }
 
-        if (receipt.status === "0x1") {
-            showToast("✅ Transaction confirmed on Sepolia!", "success");
+        // 🔹 Check status
+        if (receipt.status === '0x1') {
+            showToast('Transaction confirmed!', 'success');
             return txHash;
         } else {
             throw new Error("Transaction failed on Sepolia");
@@ -421,10 +415,11 @@ async function sendPayment(toAddress, amount) {
 
     } catch (error) {
         console.error("Payment failed:", error);
-        showToast("Payment failed: " + error.message, "error");
-        throw error; // stop checkout
+        // 🔹 IMPORTANT: stop checkout if MetaMask rejected
+        throw new Error(error.message || "Transaction was rejected");
     }
 }
+
 
 
 
@@ -790,11 +785,17 @@ async function checkout() {
             const sellerAmount = totalPrice * 0.9;
             const platformAmount = totalPrice * 0.1;
 
-            // 🔹 Process transactions
-            const txSeller = await sendPayment(item.sellerId, sellerAmount);
-            const txPlatform = await sendPayment(platformWallet, platformAmount);
+            // 🔹 Payments (fail-safe)
+            let txSeller, txPlatform;
+            try {
+                txSeller = await sendPayment(item.sellerId, sellerAmount);
+                txPlatform = await sendPayment(platformWallet, platformAmount);
+            } catch (paymentError) {
+                showToast("❌ Payment failed: " + paymentError.message, "error");
+                throw paymentError; // 🔹 Stops Firestore writes & cart clearing
+            }
 
-            // 🔹 Only after successful payments → save Firestore records
+            // 🔹 Only if payments succeeded → Firestore writes
             await addDoc(collection(db, "users", walletAddress, "artBought"), {
                 artwork: {
                     id: item.id,
@@ -1432,6 +1433,7 @@ window.addEventListener('click', function(event) {
         }
     });
 });
+
 
 
 
