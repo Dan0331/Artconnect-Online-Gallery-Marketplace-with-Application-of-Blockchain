@@ -2142,6 +2142,23 @@ window.addEventListener("click", (event) => {
 //     showToast('Failed to disconnect wallet', 'error');
 //   }
 // }
+function showLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.style.display = 'flex';
+    showLoadingText("Processing your transaction...");
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.style.display = 'none';
+}
+
+function showLoadingText(text) {
+    const textElem = document.querySelector('.loading-text');
+    if (textElem) textElem.textContent = text;
+}
+
+
 
 
 
