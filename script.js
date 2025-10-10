@@ -654,7 +654,7 @@ async function checkout() {
     const platformWallet = '0x742d35Cc6686C59fCC3e544961fcdeEeC4d91dc3'; // platform wallet
 
     try {
-        // 🔹 Show loading before any payment starts
+        // 🔹 Show loading before any transaction starts
         showLoading();
         showToast('Processing payment...', 'warning');
 
@@ -671,17 +671,20 @@ async function checkout() {
             const sellerAmount = totalPrice * 0.9;
             const platformAmount = totalPrice * 0.1;
 
-            // 🔹 Pay seller (keep loading visible)
+            // 🔹 Update loading message
             showLoadingText(`Processing payment to seller for "${item.title}"...`);
+
+            // Pay seller
             const txSeller = await sendPayment(item.sellerId, sellerAmount);
             await waitForTransactionReceipt(txSeller);
 
-            // 🔹 Pay platform (keep loading visible)
+            // 🔹 Update loading message for platform fee
             showLoadingText(`Processing platform fee for "${item.title}"...`);
+
+            // Pay platform
             const txPlatform = await sendPayment(platformWallet, platformAmount);
             await waitForTransactionReceipt(txPlatform);
 
-            // 🔹 Save records
             const buyerRef = doc(db, "users", walletAddress.toLowerCase(), "artBought", String(item.id));
             const sellerRef = doc(db, "users", item.sellerId.toLowerCase(), "artSold", String(item.id));
 
@@ -704,11 +707,11 @@ async function checkout() {
             await setDoc(buyerRef, recordData);
             await setDoc(sellerRef, recordData);
 
-            // 🔹 Remove from marketplace
+            // Remove from global marketplace
             await deleteDoc(doc(db, "artworks", String(item.id)));
             console.log("Deleted from global:", item.id);
 
-            // 🔹 Remove from seller’s sellingArts
+            // Remove from seller's sellingArts
             await deleteDoc(doc(db, "users", item.sellerId.toLowerCase(), "sellingArts", String(item.id)));
             console.log("Deleted from seller:", item.sellerId);
         }
@@ -716,7 +719,7 @@ async function checkout() {
         clearCart();
         toggleCart();
 
-        // ✅ Hide loading only when everything finishes successfully
+        // ✅ Hide loading when all payments finish
         hideLoading();
 
         showToast('Payment successful! Order confirmed.', 'success');
@@ -725,14 +728,10 @@ async function checkout() {
     } catch (error) {
         console.error('Checkout failed:', error);
 
-        // ❌ Hide loading if anything fails or is cancelled
+        // ❌ Hide loading on error or cancellation
         hideLoading();
 
-        if (error.code === 4001) {
-            showToast('Transaction cancelled by user', 'warning');
-        } else {
-            showToast(`Payment failed: ${error.message}`, 'error');
-        }
+        showToast(`Payment failed: ${error.message}`, 'error');
     }
 }
 
@@ -2143,6 +2142,7 @@ window.addEventListener("click", (event) => {
 //     showToast('Failed to disconnect wallet', 'error');
 //   }
 // }
+
 
 
 
