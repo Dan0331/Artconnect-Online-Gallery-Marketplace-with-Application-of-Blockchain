@@ -241,21 +241,35 @@ function updateWalletUI() {
 }
 
 async function sendPayment(toAddress, amount) {
-    if (!walletConnected) {
-        throw new Error('Wallet not connected');
+    if (!walletConnected) throw new Error('Wallet not connected');
+
+    // Get current chain ID
+    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+
+    // Allow only Sepolia (0xaa36a7)
+    if (chainId !== '0xaa36a7') {
+        try {
+            await window.ethereum.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: '0xaa36a7' }]
+            });
+            chainId = '0xaa36a7';
+        } catch (switchError) {
+            if (switchError.code === 4902) {
+                throw new Error('Sepolia not available in MetaMask. Please add it manually.');
+            } else {
+                throw new Error('Please switch your MetaMask network to Sepolia');
+            }
+        }
     }
 
-    // Show loading overlay
-    const overlay = document.getElementById('loadingOverlay');
-    overlay.style.display = 'flex';
+    const ethValue = Number(amount);
+    if (isNaN(ethValue) || ethValue <= 0) throw new Error("Invalid payment amount");
+
+    const amountInWei = "0x" + BigInt(Math.floor(ethValue * 1e18)).toString(16);
 
     try {
-        // Disable all buttons while processing
-        document.querySelectorAll('button').forEach(btn => btn.disabled = true);
-
-        const amountInWei = (amount * 1e18).toString(16);
-
-        const transactionHash = await window.ethereum.request({
+        const txHash = await window.ethereum.request({
             method: 'eth_sendTransaction',
             params: [{
                 from: walletAddress,
@@ -264,17 +278,14 @@ async function sendPayment(toAddress, amount) {
             }]
         });
 
-        console.log('Transaction sent:', transactionHash);
-        return transactionHash;
+        console.log("Transaction sent:", txHash);
+        return txHash;
     } catch (error) {
-        console.error('Payment failed:', error);
+        if (error.code === 4001) throw new Error('Transaction rejected by user');
         throw error;
-    } finally {
-        // Re-enable buttons and hide loader only after both payments
-        document.querySelectorAll('button').forEach(btn => btn.disabled = false);
-        overlay.style.display = 'none';
     }
 }
+
 async function waitForTransactionReceipt(txHash, timeout = 120000) {
     const start = Date.now();
     while (Date.now() - start < timeout) {
@@ -633,35 +644,74 @@ async function checkout() {
         return;
     }
 
-    const overlay = document.getElementById('loadingOverlay');
-    overlay.style.display = 'flex'; // Show loading overlay
-    document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+    const platformWallet = '0x742d35Cc6686C59fCC3e544961fcdeEeC4d91dc3'; // platform wallet
 
     try {
-        const totalAmount = 0.02; // Example: total price
-        const artistAmount = 0.015;
-        const platformAmount = 0.005;
+        showToast('Processing payment...', 'warning');
 
-        const artistWallet = "0x1234567890abcdef1234567890abcdef12345678"; // Replace
-        const platformWallet = "0xcE9D5CC73015c2b5c0A2b83af210cA53117AE430";
+        for (let item of cart) {
+            if (!item.sellerId || item.sellerId === "unknown") {
+                console.warn(`Missing sellerId for artwork: ${item.title}`);
+                continue;
+            }
 
-        // First payment to platform
-        await sendPayment(platformWallet, platformAmount);
+            const timestamp = new Date();
+            const totalPrice = item.price * (item.quantity || 1);
 
-        // Second payment to artist
-        await sendPayment(artistWallet, artistAmount);
+            // Split payment
+            const sellerAmount = totalPrice * 0.9;
+            const platformAmount = totalPrice * 0.1;
 
-        showToast('Payment successful! 🎉', 'success');
+            // Pay seller
+            const txSeller = await sendPayment(item.sellerId, sellerAmount);
+            await waitForTransactionReceipt(txSeller);
 
-        cart = [];
-        document.getElementById('cartCount').textContent = 0;
-        document.getElementById('cartTotal').textContent = "0.000";
+            // Pay platform
+            const txPlatform = await sendPayment(platformWallet, platformAmount);
+            await waitForTransactionReceipt(txPlatform);
+
+            const buyerRef = doc(db, "users", walletAddress.toLowerCase(), "artBought", String(item.id));
+            const sellerRef = doc(db, "users", item.sellerId.toLowerCase(), "artSold", String(item.id));
+
+            const recordData = {
+                artwork: {
+                    id: item.id,
+                    title: item.title,
+                    artist: item.artist || "Unknown Artist",
+                    price: item.price,
+                    imageUrl: item.imageUrl,
+                    category: item.category || "Uncategorized",
+                    description: item.description || "",
+                    year: item.year || "",
+                },
+                buyerId: walletAddress.toLowerCase(),
+                sellerId: item.sellerId.toLowerCase(),
+                timestamp: new Date().toISOString(),
+            };
+
+            await setDoc(buyerRef, recordData);
+            await setDoc(sellerRef, recordData);
+
+
+            // Remove from global marketplace
+            await deleteDoc(doc(db, "artworks", String(item.id)));
+            console.log("Deleted from global:", item.id);
+
+            // Remove from seller's sellingArts
+            await deleteDoc(doc(db, "users", item.sellerId.toLowerCase(), "sellingArts", String(item.id)));
+            console.log("Deleted from seller:", item.sellerId);
+
+        }
+
+        clearCart();
+        toggleCart();
+
+        showToast('Payment successful! Order confirmed.', 'success');
+        loadArtworks();
 
     } catch (error) {
-        showToast('Transaction failed or was cancelled.', 'error');
-    } finally {
-        overlay.style.display = 'none'; // Hide overlay after both payments
-        document.querySelectorAll('button').forEach(btn => btn.disabled = false);
+        console.error('Checkout failed:', error);
+        showToast(`Payment failed: ${error.message}`, 'error');
     }
 }
 
