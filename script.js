@@ -656,6 +656,7 @@ async function checkout() {
     try {
         // 🔹 Show loading before any transaction starts
         showLoading();
+        showLoadingText("Preparing your transactions...");
         showToast('Processing payment...', 'warning');
 
         for (let item of cart) {
@@ -671,20 +672,21 @@ async function checkout() {
             const sellerAmount = totalPrice * 0.9;
             const platformAmount = totalPrice * 0.1;
 
-            // 🔹 Update loading message
-            showLoadingText(`Processing payment to seller for "${item.title}"...`);
-
-            // Pay seller
+            // 🔹 Step 1: Pay Seller
+            showLoadingText(`Waiting for MetaMask confirmation to pay seller for "${item.title}"...`);
             const txSeller = await sendPayment(item.sellerId, sellerAmount);
+
+            showLoadingText(`Waiting for seller transaction confirmation on blockchain...`);
             await waitForTransactionReceipt(txSeller);
 
-            // 🔹 Update loading message for platform fee
-            showLoadingText(`Processing platform fee for "${item.title}"...`);
-
-            // Pay platform
+            // 🔹 Step 2: Pay Platform
+            showLoadingText(`Waiting for MetaMask confirmation to pay platform fee for "${item.title}"...`);
             const txPlatform = await sendPayment(platformWallet, platformAmount);
+
+            showLoadingText(`Waiting for platform transaction confirmation on blockchain...`);
             await waitForTransactionReceipt(txPlatform);
 
+            // 🔹 Record transactions in Firestore
             const buyerRef = doc(db, "users", walletAddress.toLowerCase(), "artBought", String(item.id));
             const sellerRef = doc(db, "users", item.sellerId.toLowerCase(), "artSold", String(item.id));
 
@@ -707,30 +709,29 @@ async function checkout() {
             await setDoc(buyerRef, recordData);
             await setDoc(sellerRef, recordData);
 
-            // Remove from global marketplace
+            // 🔹 Remove purchased artwork
             await deleteDoc(doc(db, "artworks", String(item.id)));
             console.log("Deleted from global:", item.id);
 
-            // Remove from seller's sellingArts
             await deleteDoc(doc(db, "users", item.sellerId.toLowerCase(), "sellingArts", String(item.id)));
             console.log("Deleted from seller:", item.sellerId);
         }
 
+        // 🔹 All payments done — clear and close
         clearCart();
         toggleCart();
+        showLoadingText("Finalizing your order...");
 
-        // ✅ Hide loading when all payments finish
-        hideLoading();
-
-        showToast('Payment successful! Order confirmed.', 'success');
-        loadArtworks();
+        // Wait a moment for smooth transition
+        setTimeout(() => {
+            hideLoading();
+            showToast('Payment successful! Order confirmed.', 'success');
+            loadArtworks();
+        }, 800);
 
     } catch (error) {
         console.error('Checkout failed:', error);
-
-        // ❌ Hide loading on error or cancellation
         hideLoading();
-
         showToast(`Payment failed: ${error.message}`, 'error');
     }
 }
@@ -2157,6 +2158,7 @@ function showLoadingText(text) {
     const textElem = document.querySelector('.loading-text');
     if (textElem) textElem.textContent = text;
 }
+
 
 
 
