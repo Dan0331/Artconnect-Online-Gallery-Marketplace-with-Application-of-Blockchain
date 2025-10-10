@@ -567,22 +567,21 @@
     <!-- Loading control functions used by your JS - keep these available globally -->
     <script>
         function showLoading() {
-            const overlay = document.getElementById("loadingOverlay");
-            if (overlay) {
-                overlay.style.display = "flex";
-                // ensure it covers everything visually (styles should be in styles.css)
-                overlay.setAttribute('aria-hidden', 'false');
-            }
-            // block interactions while loading
-            document.body.style.pointerEvents = 'none';
-        }
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.style.display = 'flex';
+    showLoadingText("Processing your transaction...");
+}
 
-        function hideLoading() {
-            const overlay = document.getElementById("loadingOverlay");
-            if (overlay) {
-                overlay.style.display = "none";
-                overlay.setAttribute('aria-hidden', 'true');
-            }
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.style.display = 'none';
+}
+
+function showLoadingText(text) {
+    const textElem = document.querySelector('.loading-text');
+    if (textElem) textElem.textContent = text;
+}
+
             document.body.style.pointerEvents = 'auto';
         }
     </script>
@@ -590,3 +589,4 @@
     <script src="script.js"></script>
 </body>
 </html>
+
