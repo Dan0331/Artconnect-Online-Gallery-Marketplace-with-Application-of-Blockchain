@@ -243,32 +243,35 @@ function updateWalletUI() {
 async function sendPayment(toAddress, amount) {
     if (!walletConnected) throw new Error('Wallet not connected');
 
-    // Get current chain ID
-    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-
-    // Allow only Sepolia (0xaa36a7)
-    if (chainId !== '0xaa36a7') {
-        try {
-            await window.ethereum.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0xaa36a7' }]
-            });
-            chainId = '0xaa36a7';
-        } catch (switchError) {
-            if (switchError.code === 4902) {
-                throw new Error('Sepolia not available in MetaMask. Please add it manually.');
-            } else {
-                throw new Error('Please switch your MetaMask network to Sepolia');
-            }
-        }
-    }
-
-    const ethValue = Number(amount);
-    if (isNaN(ethValue) || ethValue <= 0) throw new Error("Invalid payment amount");
-
-    const amountInWei = "0x" + BigInt(Math.floor(ethValue * 1e18)).toString(16);
+    // Show loading overlay
+    showLoading();
 
     try {
+        // Get current chain ID
+        let chainId = await window.ethereum.request({ method: 'eth_chainId' });
+
+        // Allow only Sepolia (0xaa36a7)
+        if (chainId !== '0xaa36a7') {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0xaa36a7' }]
+                });
+                chainId = '0xaa36a7';
+            } catch (switchError) {
+                if (switchError.code === 4902) {
+                    throw new Error('Sepolia not available in MetaMask. Please add it manually.');
+                } else {
+                    throw new Error('Please switch your MetaMask network to Sepolia');
+                }
+            }
+        }
+
+        const ethValue = Number(amount);
+        if (isNaN(ethValue) || ethValue <= 0) throw new Error("Invalid payment amount");
+
+        const amountInWei = "0x" + BigInt(Math.floor(ethValue * 1e18)).toString(16);
+
         const txHash = await window.ethereum.request({
             method: 'eth_sendTransaction',
             params: [{
@@ -283,8 +286,12 @@ async function sendPayment(toAddress, amount) {
     } catch (error) {
         if (error.code === 4001) throw new Error('Transaction rejected by user');
         throw error;
+    } finally {
+        // Hide loading overlay after transaction attempt (success or fail)
+        hideLoading();
     }
 }
+
 
 async function waitForTransactionReceipt(txHash, timeout = 120000) {
     const start = Date.now();
@@ -646,6 +653,9 @@ async function checkout() {
 
     const platformWallet = '0x742d35Cc6686C59fCC3e544961fcdeEeC4d91dc3'; // platform wallet
 
+    // 🟢 Show loading overlay before starting the process
+    showLoading();
+
     try {
         showToast('Processing payment...', 'warning');
 
@@ -692,7 +702,6 @@ async function checkout() {
             await setDoc(buyerRef, recordData);
             await setDoc(sellerRef, recordData);
 
-
             // Remove from global marketplace
             await deleteDoc(doc(db, "artworks", String(item.id)));
             console.log("Deleted from global:", item.id);
@@ -700,7 +709,6 @@ async function checkout() {
             // Remove from seller's sellingArts
             await deleteDoc(doc(db, "users", item.sellerId.toLowerCase(), "sellingArts", String(item.id)));
             console.log("Deleted from seller:", item.sellerId);
-
         }
 
         clearCart();
@@ -712,6 +720,9 @@ async function checkout() {
     } catch (error) {
         console.error('Checkout failed:', error);
         showToast(`Payment failed: ${error.message}`, 'error');
+    } finally {
+        // 🔴 Hide loading overlay when done (success or error)
+        hideLoading();
     }
 }
 
@@ -2122,6 +2133,7 @@ window.addEventListener("click", (event) => {
 //     showToast('Failed to disconnect wallet', 'error');
 //   }
 // }
+
 
 
 
