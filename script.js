@@ -1502,11 +1502,23 @@ async function loadUserProfileFromDB(walletAddr) {
         }
 
         renderUserProfile();
+
     } catch (err) {
         console.error("Error loading profile:", err);
         showToast("Failed to load profile", "error");
     }
+
+    // ✅ NEW: Ensure wallet connection is recognized after refresh
+    onWalletReady((address) => {
+        console.log("Wallet ready inside loadUserProfileFromDB:", address);
+
+        // Reload profile only when wallet becomes ready again
+        if (address && address.toLowerCase() !== walletAddr.toLowerCase()) {
+            loadUserProfileFromDB(address);
+        }
+    });
 }
+
 
 
 function enableUsernameEdit() {
@@ -2226,6 +2238,7 @@ function showLoadingText(text) {
     const textElem = document.querySelector('.loading-text');
     if (textElem) textElem.textContent = text;
 }
+
 
 
 
