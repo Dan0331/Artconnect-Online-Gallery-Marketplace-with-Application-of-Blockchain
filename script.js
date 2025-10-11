@@ -112,6 +112,12 @@ const blockchainDetails = {
 
 // Web3 and MetaMask functionality & add in db 
 async function connectWallet() { 
+    // 🔹 If wallet is already connected, clicking again will log out
+    if (walletConnected) {
+        disconnectWallet();
+        return;
+    }
+
     if (typeof window.ethereum === 'undefined') { 
         showToast('Please install MetaMask to use this feature', 'error'); 
         return; 
@@ -182,6 +188,17 @@ async function connectWallet() {
         showToast('Failed to connect wallet', 'error'); 
     } 
 }
+
+// 🔹 New: Logout (disconnect) helper
+function disconnectWallet() {
+    walletConnected = false;
+    walletAddress = null;
+    localStorage.removeItem('connectedWallet');
+    updateWalletUI();
+    showToast('Wallet disconnected successfully!', 'info');
+    console.log('Wallet manually disconnected.');
+}
+
 
 // ✅ Automatically reconnect wallet when page reloads
 window.addEventListener('load', async () => {
@@ -2274,6 +2291,7 @@ function onWalletReady(callback) {
         });
     }
 }
+
 
 
 
