@@ -2238,6 +2238,17 @@ function showLoadingText(text) {
     const textElem = document.querySelector('.loading-text');
     if (textElem) textElem.textContent = text;
 }
+function onWalletReady(callback) {
+    if (window.ethereum && window.ethereum.selectedAddress) {
+        callback(window.ethereum.selectedAddress);
+    } else {
+        window.addEventListener('wallet_ready', () => {
+            callback(window.ethereum.selectedAddress);
+        });
+    }
+}
+
+
 
 
 
