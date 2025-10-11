@@ -723,7 +723,19 @@ function updateCartUI() {
     const cartCount = document.getElementById('cartCount');
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
     cartCount.textContent = totalItems;
+
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    const clearCartBtn = document.querySelector('.btn-secondary');
+
+    if (totalItems === 0) {
+        checkoutBtn.disabled = true;
+        clearCartBtn.disabled = true;
+    } else {
+        checkoutBtn.disabled = false;
+        clearCartBtn.disabled = false;
+    }
 }
+
 
 function toggleCart() {
     const modal = document.getElementById('cartModal');
@@ -2323,6 +2335,7 @@ function onWalletReady(callback) {
         });
     }
 }
+
 
 
 
