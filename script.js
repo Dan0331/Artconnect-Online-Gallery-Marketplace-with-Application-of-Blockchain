@@ -120,8 +120,29 @@ const blockchainDetails = {
 // });
 
 
-// Add this constant near your other globals
 const USER_DISCONNECTED_KEY = 'walletDisconnectedByUser';
+
+// 🔹 Helper to fetch and update user profile after wallet connect
+async function refreshUserProfile() {
+    if (!walletConnected || !walletAddress) return;
+
+    try {
+        // Example: fetch user profile from your backend using walletAddress
+        const response = await fetch(`/api/getUserProfile?wallet=${walletAddress}`);
+        if (!response.ok) throw new Error('Failed to fetch profile');
+
+        const profileData = await response.json();
+
+        // Update your UI with profile data
+        // Replace these IDs with your actual profile DOM elements
+        document.getElementById('profileName').textContent = profileData.name || 'Unnamed';
+        document.getElementById('profileAvatar').src = profileData.avatar || '/default-avatar.png';
+
+        console.log('Profile updated for wallet:', walletAddress);
+    } catch (err) {
+        console.error('Failed to refresh user profile:', err);
+    }
+}
 
 async function connectWallet() { 
     // 🔹 If wallet is already connected, clicking again will log out
@@ -136,10 +157,8 @@ async function connectWallet() {
     } 
     
     try { 
-        // Check if connected to Ethereum network 
         const chainId = await window.ethereum.request({ method: 'eth_chainId' }); 
         
-        // enforce Sepolia only
         if (chainId !== '0xaa36a7') {
             showToast('Switching MetaMask to Sepolia...', 'warning');
             try {
@@ -148,7 +167,6 @@ async function connectWallet() {
                     params: [{ chainId: '0xaa36a7' }]
                 });
             } catch (switchError) {
-                // If Sepolia not added to MetaMask, try to add it
                 if (switchError.code === 4902) {
                     try {
                         await window.ethereum.request({
@@ -161,7 +179,6 @@ async function connectWallet() {
                                 blockExplorerUrls: ['https://sepolia.etherscan.io']
                             }]
                         });
-                        // then request switch again
                         await window.ethereum.request({
                             method: 'wallet_switchEthereumChain',
                             params: [{ chainId: '0xaa36a7' }]
@@ -179,24 +196,21 @@ async function connectWallet() {
             }
         }
 
-        // ✅ Request wallet access
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         
-        // after you set walletAddress and walletConnected inside connectWallet (on success)
         if (accounts.length > 0) {
             walletAddress = accounts[0];
             walletConnected = true;
 
-            // 🔹 If user manually logged out earlier, clear that flag
             localStorage.removeItem(USER_DISCONNECTED_KEY);
-
-            // ✅ Save wallet to persist connection
             localStorage.setItem('connectedWallet', walletAddress);
 
             updateWalletUI();
             showToast('Wallet connected successfully!', 'success');
 
-            // ✅ Notify other scripts wallet is ready (emit both forms)
+            // 🔹 Fire profile refresh after wallet connects
+            refreshUserProfile();
+
             window.dispatchEvent(new CustomEvent('wallet_ready', { detail: walletAddress }));
             document.dispatchEvent(new Event('walletReady'));
         }
@@ -206,12 +220,10 @@ async function connectWallet() {
     } 
 }
 
-// 🔹 Updated logout (disconnect) helper
 function disconnectWallet() {
     walletConnected = false;
     walletAddress = null;
 
-    // Clear connection data and mark manual logout
     localStorage.removeItem('connectedWallet');
     localStorage.setItem(USER_DISCONNECTED_KEY, 'true');
 
@@ -219,14 +231,11 @@ function disconnectWallet() {
     showToast('Wallet disconnected successfully!', 'info');
     console.log('Wallet manually disconnected.');
 
-    // Emit consistent disconnect events
     window.dispatchEvent(new CustomEvent('wallet_disconnected'));
     document.dispatchEvent(new Event('walletDisconnected'));
 }
 
-
-
-// ✅ Automatically reconnect wallet when page reloads
+// 🔹 Automatically reconnect wallet when page reloads
 window.addEventListener('load', async () => {
     const savedWallet = localStorage.getItem('connectedWallet');
 
@@ -241,7 +250,9 @@ window.addEventListener('load', async () => {
                 updateWalletUI();
                 showToast('Wallet reconnected automatically!', 'success');
 
-                // ✅ Notify other scripts wallet is ready
+                // 🔹 Fire profile refresh after auto reconnect
+                refreshUserProfile();
+
                 document.dispatchEvent(new Event('walletReady'));
             } else {
                 localStorage.removeItem('connectedWallet');
@@ -252,7 +263,7 @@ window.addEventListener('load', async () => {
     }
 });
 
-// ✅ Optional: detect account or network changes
+// 🔹 Detect account or network changes
 if (typeof window.ethereum !== 'undefined') {
     window.ethereum.on('accountsChanged', (accounts) => {
         if (accounts.length === 0) {
@@ -267,7 +278,9 @@ if (typeof window.ethereum !== 'undefined') {
             updateWalletUI();
             showToast('Wallet account changed', 'info');
 
-            // ✅ Notify other scripts wallet is ready
+            // 🔹 Fire profile refresh when account changes
+            refreshUserProfile();
+
             document.dispatchEvent(new Event('walletReady'));
         }
     });
@@ -279,9 +292,7 @@ if (typeof window.ethereum !== 'undefined') {
     });
 }
 
-
-// 🧩 --- Added Helper ---
-// Wait for wallet to finish loading before using it in other scripts
+// 🔹 Wait for wallet to finish loading before using it in other scripts
 function onWalletReady(callback) {
     if (walletConnected && walletAddress) {
         callback(walletAddress);
@@ -289,6 +300,7 @@ function onWalletReady(callback) {
         document.addEventListener('walletReady', () => callback(walletAddress), { once: true });
     }
 }
+
 
 
 
@@ -2317,6 +2329,7 @@ function onWalletReady(callback) {
         });
     }
 }
+
 
 
 
