@@ -1573,7 +1573,18 @@ function renderUserProfile() {
     loadUserArtworks(walletAddress);
     loadUserPurchases(walletAddress);
   }
+
+  // ✅ NEW: ensure wallet data is properly recognized after refresh
+  onWalletReady((address) => {
+    console.log("Wallet ready inside renderUserProfile:", address);
+    document.getElementById("profileWallet").textContent = `Wallet: ${address}`;
+
+    // Reload wallet-dependent data once the wallet reconnects
+    loadUserArtworks(address);
+    loadUserPurchases(address);
+  });
 }
+
 
 
 
@@ -2215,6 +2226,7 @@ function showLoadingText(text) {
     const textElem = document.querySelector('.loading-text');
     if (textElem) textElem.textContent = text;
 }
+
 
 
 
