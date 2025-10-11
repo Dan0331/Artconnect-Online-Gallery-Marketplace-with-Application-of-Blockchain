@@ -123,26 +123,26 @@ const blockchainDetails = {
 const USER_DISCONNECTED_KEY = 'walletDisconnectedByUser';
 
 // 🔹 Helper to fetch and update user profile after wallet connect
-async function refreshUserProfile() {
-    if (!walletConnected || !walletAddress) return;
+//async function refreshUserProfile() {
+ //   if (!walletConnected || !walletAddress) return;
 
-    try {
+//    try {
         // Example: fetch user profile from your backend using walletAddress
-        const response = await fetch(`/api/getUserProfile?wallet=${walletAddress}`);
-        if (!response.ok) throw new Error('Failed to fetch profile');
+//     const response = await fetch(`/api/getUserProfile?wallet=${walletAddress}`);
+//        if (!response.ok) throw new Error('Failed to fetch profile');
 
-        const profileData = await response.json();
+//        const profileData = await response.json();
 
         // Update your UI with profile data
         // Replace these IDs with your actual profile DOM elements
-        document.getElementById('profileName').textContent = profileData.name || 'Unnamed';
-        document.getElementById('profileAvatar').src = profileData.avatar || '/default-avatar.png';
+ //       document.getElementById('profileName').textContent = profileData.name || 'Unnamed';
+//        document.getElementById('profileAvatar').src = profileData.avatar || '/default-avatar.png';
 
-        console.log('Profile updated for wallet:', walletAddress);
-    } catch (err) {
-        console.error('Failed to refresh user profile:', err);
-    }
-}
+  //      console.log('Profile updated for wallet:', walletAddress);
+   // } catch (err) {
+     //   console.error('Failed to refresh user profile:', err);
+    //}
+//}
 
 async function connectWallet() { 
     // 🔹 If wallet is already connected, clicking again will log out
@@ -209,7 +209,7 @@ async function connectWallet() {
             showToast('Wallet connected successfully!', 'success');
 
             // 🔹 Fire profile refresh after wallet connects
-            refreshUserProfile();
+            //refreshUserProfile();
 
             window.dispatchEvent(new CustomEvent('wallet_ready', { detail: walletAddress }));
             document.dispatchEvent(new Event('walletReady'));
@@ -251,7 +251,7 @@ window.addEventListener('load', async () => {
                 showToast('Wallet reconnected automatically!', 'success');
 
                 // 🔹 Fire profile refresh after auto reconnect
-                refreshUserProfile();
+                //refreshUserProfile();
 
                 document.dispatchEvent(new Event('walletReady'));
             } else {
@@ -279,7 +279,7 @@ if (typeof window.ethereum !== 'undefined') {
             showToast('Wallet account changed', 'info');
 
             // 🔹 Fire profile refresh when account changes
-            refreshUserProfile();
+            //refreshUserProfile();
 
             document.dispatchEvent(new Event('walletReady'));
         }
@@ -2329,6 +2329,7 @@ function onWalletReady(callback) {
         });
     }
 }
+
 
 
 
