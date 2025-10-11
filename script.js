@@ -6,24 +6,33 @@ let walletAddress = null;
 let submittedArtworks = JSON.parse(localStorage.getItem('user_submitted_artwork') || '[]');
 let isAdmin = false;
 
-
-// 🔹 Global wallet recovery after refresh
+// 🔹 Global wallet recovery after refresh (respects manual logout)
 window.addEventListener("DOMContentLoaded", async () => {
+  // If user intentionally disconnected earlier, don't auto-restore
+  if (localStorage.getItem(USER_DISCONNECTED_KEY) === 'true') {
+    console.log("User previously disconnected — skipping auto reconnect");
+    return;
+  }
+
   if (window.ethereum) {
     try {
       const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-      if (accounts.length > 0) {
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+
+      if (accounts.length > 0 && chainId === '0xaa36a7') {
         walletAddress = accounts[0];
         walletConnected = true;
+        updateWalletUI();
         console.log("Wallet restored after refresh:", walletAddress);
 
-        // 🔹 Fire global event so other functions can react
+        // Fire events so other code responds (emit both so older handlers still work)
         window.dispatchEvent(new CustomEvent('wallet_ready', { detail: walletAddress }));
+        document.dispatchEvent(new Event('walletReady'));
 
-        // 🔹 Load profile only once the wallet is restored
+        // Load profile now that wallet is present
         loadUserProfileFromDB(walletAddress);
       } else {
-        console.log("No wallet connected yet.");
+        console.log("No wallet connected yet or wrong chain.");
       }
     } catch (err) {
       console.error("Error restoring wallet:", err);
@@ -32,6 +41,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     console.warn("MetaMask not found");
   }
 });
+
 
 // Enhanced artwork data with blockchain details
 const blockchainDetails = {
@@ -110,7 +120,9 @@ const blockchainDetails = {
 // });
 
 
-// Web3 and MetaMask functionality & add in db 
+// Add this constant near your other globals
+const USER_DISCONNECTED_KEY = 'walletDisconnectedByUser';
+
 async function connectWallet() { 
     // 🔹 If wallet is already connected, clicking again will log out
     if (walletConnected) {
@@ -170,9 +182,13 @@ async function connectWallet() {
         // ✅ Request wallet access
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         
+        // after you set walletAddress and walletConnected inside connectWallet (on success)
         if (accounts.length > 0) {
             walletAddress = accounts[0];
             walletConnected = true;
+
+            // 🔹 If user manually logged out earlier, clear that flag
+            localStorage.removeItem(USER_DISCONNECTED_KEY);
 
             // ✅ Save wallet to persist connection
             localStorage.setItem('connectedWallet', walletAddress);
@@ -180,7 +196,8 @@ async function connectWallet() {
             updateWalletUI();
             showToast('Wallet connected successfully!', 'success');
 
-            // ✅ Notify other scripts wallet is ready
+            // ✅ Notify other scripts wallet is ready (emit both forms)
+            window.dispatchEvent(new CustomEvent('wallet_ready', { detail: walletAddress }));
             document.dispatchEvent(new Event('walletReady'));
         }
     } catch (error) { 
@@ -189,15 +206,24 @@ async function connectWallet() {
     } 
 }
 
-// 🔹 New: Logout (disconnect) helper
+// 🔹 Updated logout (disconnect) helper
 function disconnectWallet() {
     walletConnected = false;
     walletAddress = null;
+
+    // Clear connection data and mark manual logout
     localStorage.removeItem('connectedWallet');
+    localStorage.setItem(USER_DISCONNECTED_KEY, 'true');
+
     updateWalletUI();
     showToast('Wallet disconnected successfully!', 'info');
     console.log('Wallet manually disconnected.');
+
+    // Emit consistent disconnect events
+    window.dispatchEvent(new CustomEvent('wallet_disconnected'));
+    document.dispatchEvent(new Event('walletDisconnected'));
 }
+
 
 
 // ✅ Automatically reconnect wallet when page reloads
@@ -2291,6 +2317,7 @@ function onWalletReady(callback) {
         });
     }
 }
+
 
 
 
