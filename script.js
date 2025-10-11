@@ -803,7 +803,6 @@ async function checkout() {
                 continue;
             }
 
-            const timestamp = new Date();
             const totalPrice = item.price * (item.quantity || 1);
 
             // Split payment
@@ -813,16 +812,12 @@ async function checkout() {
             // 🔹 Step 1: Pay Seller
             showLoadingText(`Waiting for MetaMask confirmation to pay seller for "${item.title}"...`);
             const txSeller = await sendPayment(item.sellerId, sellerAmount);
-
-            showLoadingText(`Waiting for seller transaction confirmation on blockchain...`);
-            await waitForTransactionReceipt(txSeller);
+            console.log("Transaction sent to seller:", txSeller);
 
             // 🔹 Step 2: Pay Platform
             showLoadingText(`Waiting for MetaMask confirmation to pay platform fee for "${item.title}"...`);
             const txPlatform = await sendPayment(platformWallet, platformAmount);
-
-            showLoadingText(`Waiting for platform transaction confirmation on blockchain...`);
-            await waitForTransactionReceipt(txPlatform);
+            console.log("Transaction sent to platform:", txPlatform);
 
             // 🔹 Record transactions in Firestore
             const buyerRef = doc(db, "users", walletAddress.toLowerCase(), "artBought", String(item.id));
@@ -860,7 +855,6 @@ async function checkout() {
         toggleCart();
         showLoadingText("Finalizing your order...");
 
-        // Wait a moment for smooth transition
         setTimeout(() => {
             hideLoading();
             showToast('Payment successful! Order confirmed.', 'success');
@@ -2329,6 +2323,7 @@ function onWalletReady(callback) {
         });
     }
 }
+
 
 
 
