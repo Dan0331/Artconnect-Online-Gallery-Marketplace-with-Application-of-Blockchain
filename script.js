@@ -725,7 +725,7 @@ function updateCartUI() {
     cartCount.textContent = totalItems;
 
     const checkoutBtn = document.getElementById('checkoutBtn');
-    const clearCartBtn = document.querySelector('.btn-secondary');
+    const clearCartBtn = document.getElementById('clearCartBtn');
 
     if (totalItems === 0) {
         checkoutBtn.disabled = true;
@@ -735,6 +735,7 @@ function updateCartUI() {
         clearCartBtn.disabled = false;
     }
 }
+
 
 
 function toggleCart() {
@@ -2335,6 +2336,7 @@ function onWalletReady(callback) {
         });
     }
 }
+
 
 
 
