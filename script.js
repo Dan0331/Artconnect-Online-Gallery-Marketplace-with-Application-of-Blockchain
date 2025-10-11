@@ -134,44 +134,73 @@ async function connectWallet() {
             }
         }
 
+        // ✅ Request wallet access
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         
-        const accounts = await window.ethereum.request({ 
-            method: 'eth_requestAccounts' 
-        }); 
-        
-        if (accounts.length > 0) { 
-            // Validate that it's an Ethereum address 
-            if (!isValidEthereumAddress(accounts[0])) { 
-                showToast('Invalid Ethereum address detected', 'error'); 
-                return; 
-            } 
-            
-            walletAddress = accounts[0]; 
-            //localStorage.setItem("walletAddress", walletAddress);
-            walletConnected = true; 
-            updateWalletUI(); 
+        if (accounts.length > 0) {
+            walletAddress = accounts[0];
+            walletConnected = true;
 
-            await loadUserProfileFromDB(walletAddress);
-            await loadUserPurchases(walletAddress);
+            // ✅ Save wallet to persist connection
+            localStorage.setItem('connectedWallet', walletAddress);
 
-            showToast('Wallet connected successfully!', 'success'); 
-            
-            // Listen for account changes 
-            window.ethereum.on('accountsChanged', handleAccountsChanged); 
-            window.ethereum.on('chainChanged', handleChainChanged); 
-
-            // calls function to save user info in db 
-            await saveUserToFirestore(walletAddress); 
-        } 
+            updateWalletUI();
+            showToast('Wallet connected successfully!', 'success');
+        }
     } catch (error) { 
-        console.error('Failed to connect wallet:', error); 
-        if (error.code === 4001) { 
-            showToast('Connection rejected by user', 'error'); 
-        } else { 
-            showToast('Failed to connect Ethereum wallet', 'error'); 
-        } 
+        console.error(error); 
+        showToast('Failed to connect wallet', 'error'); 
     } 
 }
+
+// ✅ Automatically reconnect wallet when page reloads
+window.addEventListener('load', async () => {
+    const savedWallet = localStorage.getItem('connectedWallet');
+
+    if (savedWallet && typeof window.ethereum !== 'undefined') {
+        try {
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+
+            if (accounts.length > 0 && chainId === '0xaa36a7') {
+                walletAddress = accounts[0];
+                walletConnected = true;
+                updateWalletUI();
+                showToast('Wallet reconnected automatically!', 'success');
+            } else {
+                localStorage.removeItem('connectedWallet');
+            }
+        } catch (err) {
+            console.error('Auto reconnect failed:', err);
+        }
+    }
+});
+
+// ✅ Optional: detect account or network changes
+if (typeof window.ethereum !== 'undefined') {
+    window.ethereum.on('accountsChanged', (accounts) => {
+        if (accounts.length === 0) {
+            localStorage.removeItem('connectedWallet');
+            walletConnected = false;
+            walletAddress = null;
+            updateWalletUI();
+            showToast('Wallet disconnected', 'info');
+        } else {
+            walletAddress = accounts[0];
+            localStorage.setItem('connectedWallet', walletAddress);
+            updateWalletUI();
+            showToast('Wallet account changed', 'info');
+        }
+    });
+
+    window.ethereum.on('chainChanged', (chainId) => {
+        if (chainId !== '0xaa36a7') {
+            showToast('Please switch back to Sepolia network', 'warning');
+        }
+    });
+}
+
+
 
 function isValidEthereumAddress(address) {
     return /^0x[a-fA-F0-9]{40}$/.test(address);
@@ -2158,6 +2187,7 @@ function showLoadingText(text) {
     const textElem = document.querySelector('.loading-text');
     if (textElem) textElem.textContent = text;
 }
+
 
 
 
