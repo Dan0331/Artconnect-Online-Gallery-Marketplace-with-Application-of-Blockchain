@@ -6,6 +6,33 @@ let walletAddress = null;
 let submittedArtworks = JSON.parse(localStorage.getItem('user_submitted_artwork') || '[]');
 let isAdmin = false;
 
+
+// 🔹 Global wallet recovery after refresh
+window.addEventListener("DOMContentLoaded", async () => {
+  if (window.ethereum) {
+    try {
+      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+      if (accounts.length > 0) {
+        walletAddress = accounts[0];
+        walletConnected = true;
+        console.log("Wallet restored after refresh:", walletAddress);
+
+        // 🔹 Fire global event so other functions can react
+        window.dispatchEvent(new CustomEvent('wallet_ready', { detail: walletAddress }));
+
+        // 🔹 Load profile only once the wallet is restored
+        loadUserProfileFromDB(walletAddress);
+      } else {
+        console.log("No wallet connected yet.");
+      }
+    } catch (err) {
+      console.error("Error restoring wallet:", err);
+    }
+  } else {
+    console.warn("MetaMask not found");
+  }
+});
+
 // Enhanced artwork data with blockchain details
 const blockchainDetails = {
     1: {
@@ -2247,6 +2274,7 @@ function onWalletReady(callback) {
         });
     }
 }
+
 
 
 
