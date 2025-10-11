@@ -146,6 +146,9 @@ async function connectWallet() {
 
             updateWalletUI();
             showToast('Wallet connected successfully!', 'success');
+
+            // ✅ Notify other scripts wallet is ready
+            document.dispatchEvent(new Event('walletReady'));
         }
     } catch (error) { 
         console.error(error); 
@@ -167,6 +170,9 @@ window.addEventListener('load', async () => {
                 walletConnected = true;
                 updateWalletUI();
                 showToast('Wallet reconnected automatically!', 'success');
+
+                // ✅ Notify other scripts wallet is ready
+                document.dispatchEvent(new Event('walletReady'));
             } else {
                 localStorage.removeItem('connectedWallet');
             }
@@ -190,6 +196,9 @@ if (typeof window.ethereum !== 'undefined') {
             localStorage.setItem('connectedWallet', walletAddress);
             updateWalletUI();
             showToast('Wallet account changed', 'info');
+
+            // ✅ Notify other scripts wallet is ready
+            document.dispatchEvent(new Event('walletReady'));
         }
     });
 
@@ -198,6 +207,17 @@ if (typeof window.ethereum !== 'undefined') {
             showToast('Please switch back to Sepolia network', 'warning');
         }
     });
+}
+
+
+// 🧩 --- Added Helper ---
+// Wait for wallet to finish loading before using it in other scripts
+function onWalletReady(callback) {
+    if (walletConnected && walletAddress) {
+        callback(walletAddress);
+    } else {
+        document.addEventListener('walletReady', () => callback(walletAddress), { once: true });
+    }
 }
 
 
@@ -270,6 +290,15 @@ function updateWalletUI() {
 }
 
 async function sendPayment(toAddress, amount) {
+
+    // ✅ Ensure wallet is ready before executing transaction
+    if (!walletConnected || !walletAddress) {
+        return onWalletReady(async (address) => {
+            console.log("Wallet was not ready — now connected:", address);
+            return await sendPayment(toAddress, amount); // re-run once wallet is ready
+        });
+    }
+
     if (!walletConnected) throw new Error('Wallet not connected');
 
     // Show loading overlay
@@ -319,17 +348,6 @@ async function sendPayment(toAddress, amount) {
         // Hide loading overlay after transaction attempt (success or fail)
         hideLoading();
     }
-}
-
-
-async function waitForTransactionReceipt(txHash, timeout = 120000) {
-    const start = Date.now();
-    while (Date.now() - start < timeout) {
-        const receipt = await window.ethereum.request({ method: 'eth_getTransactionReceipt', params: [txHash] });
-        if (receipt) return receipt;
-        await new Promise(r => setTimeout(r, 2000)); // wait 2s
-    }
-    throw new Error('Transaction not confirmed within timeout');
 }
 
 
@@ -670,6 +688,15 @@ function renderCartItems() {
 }
 
 async function checkout() {
+
+    // ✅ Ensure wallet is ready before running any checkout logic
+    if (!walletConnected || !walletAddress) {
+        return onWalletReady(async (address) => {
+            console.log("Wallet was not ready — now connected:", address);
+            await checkout(); // re-run once wallet is ready
+        });
+    }
+
     if (cart.length === 0) {
         showToast('Your cart is empty', 'error');
         return;
@@ -764,6 +791,7 @@ async function checkout() {
         showToast(`Payment failed: ${error.message}`, 'error');
     }
 }
+
 
 
 async function uploadToImgBB(file) {
@@ -2187,6 +2215,7 @@ function showLoadingText(text) {
     const textElem = document.querySelector('.loading-text');
     if (textElem) textElem.textContent = text;
 }
+
 
 
 
