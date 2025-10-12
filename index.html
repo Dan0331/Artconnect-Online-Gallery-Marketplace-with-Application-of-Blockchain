@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>ArtConnect - Premium NFT Marketplace</title>
     <meta name="description" content="Create, discover and trade NFT artworks with cryptocurrency payments via MetaMask">
     <link rel="stylesheet" href="styles.css">
@@ -174,7 +174,7 @@
             </div>
         </section>
 
-        <!-- About Section -->
+        <!-- About Section (merged from file 2) -->
         <section id="about" class="section">
             <div class="container">
                 <div class="section-header">
@@ -212,7 +212,7 @@
             </div>
         </section>
 
-        <!-- Contact Section -->
+        <!-- Contact Section (merged from file 2) -->
         <section id="contact" class="section">
             <div class="container">
                 <div class="section-header">
@@ -294,7 +294,7 @@
             </div>
         </section>
 
-        <!-- Admin Panel Section -->
+        <!-- Admin Panel Section (merged from file 2) -->
         <section id="admin" class="section admin-only" style="display:none;">
             <div class="container">
                 <div class="section-header">
@@ -366,8 +366,7 @@
             </div>
         </section>
 
-
-        <!-- User Profile Section -->
+        <!-- Profile Section (merged from file 2) -->
         <section id="profile" class="section">
             <div class="container">
                 <div class="section-header">
@@ -386,7 +385,6 @@
                         <button class="btn-primary" onclick="saveUsername()">Save</button>
                     </div>
 
-
                     <div class="bio-section">
                         <h3>Bio</h3>
                         <p id="profileBio">No bio yet.</p>
@@ -397,7 +395,6 @@
                             <button class="btn-primary" onclick="saveBio()">Save</button>
                         </div>
                     </div>
-
 
                     <p id="profileWallet">Wallet: Not Connected</p>
                 </div>
@@ -414,8 +411,8 @@
                     </div>
                 </div>
             </div>
-        <!--/div -->
         </section>
+
     </main>
 
     <!-- Resell Modal -->
@@ -434,12 +431,7 @@
         </div>
     </div>
 
-
-
-
-
-
-    <!-- Shopping Cart Modal -->
+    <!-- Shopping Cart Modal (single unified) -->
     <div class="cart-modal" id="cartModal">
         <div class="cart-content">
             <div class="cart-header">
@@ -453,11 +445,10 @@
                 <div class="cart-total">
                     <strong>Total: <span id="cartTotal">0.000</span> ETH</strong>
                 </div>
-               <div class="cart-actions">
-                <button class="btn-secondary cart-btn" id="clearCartBtn" onclick="clearCart()">Clear Cart</button>
-                <button class="btn-primary cart-btn" id="checkoutBtn" onclick="checkout()">Checkout</button>
-            </div>
-
+                <div class="cart-actions">
+                    <button class="btn-secondary cart-btn" id="clearCartBtn" onclick="clearCart()">Clear Cart</button>
+                    <button class="btn-primary cart-btn" id="checkoutBtn" onclick="checkout()">Checkout</button>
+                </div>
             </div>
         </div>
     </div>
@@ -472,7 +463,7 @@
         </div>
     </div>
 
-    <!-- Artwork Details Modal -->
+    <!-- Artwork Details Modal (detailed view) -->
     <div id="artDetailsModal" class="modal">
         <div class="modal-content" id="artDetailsContent">
             <button class="modal-close" onclick="closeDetailsModal()">
@@ -493,10 +484,6 @@
             </div>
         </div>
     </div>
-
-
-
-
 
     <!-- Blockchain Details Modal -->
     <div id="blockchainModal" class="artwork-modal">
@@ -521,7 +508,7 @@
     <!-- Toast Notifications -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Loading Overlay (no CSS included here — styles must live in styles.css) -->
+    <!-- Loading Overlay (single unified) -->
     <div id="loadingOverlay" class="loading-overlay" style="display:none; align-items:center; justify-content:center; flex-direction:column;">
         <div class="loading-spinner" aria-hidden="true"></div>
         <p class="loading-text">Processing your transactions, please wait...</p>
@@ -565,19 +552,7 @@
 
     <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 
-    <!-- Loading control functions used by your JS - keep these available globally -->
-
+    <!-- Main JS -->
     <script src="script.js"></script>
-    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
-  <div class="loading-spinner"></div>
-  <p class="loading-text">Processing your transaction...</p>
-</div>
-
 </body>
 </html>
-
-
-
-
-
-
