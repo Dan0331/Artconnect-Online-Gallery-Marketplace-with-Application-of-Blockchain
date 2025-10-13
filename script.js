@@ -2680,42 +2680,42 @@ function renderUserPurchases(purchases) {
 
 // Expose functions to global scope for HTML buttons
 // Expose functions to the global window scope
-Object.assign(window, {
-  connectWallet,
-  disconnectWallet,
-  toggleCart,
-  addToCart,
-  removeFromCart,
-  clearCart,
-  checkout,
-  showSection,
-  loadArtworksLive,
-  filterArtworks,
-  submitArtwork,
-  approveAllArtworks,
-  viewReports,
-  exportData,
-  viewAllUsers,
-  viewTransactions,
-  enableUsernameEdit,
-  saveUsername,
-  enableBioEdit,
-  saveBio,
-  showArtworkDetail,
-  closeArtworkModal,
-  showArtistProfile,
-  closeResellModal,
-  confirmResell,
-  closeBlockchainModal,
-  closeDetailsModal,
-  closeArtistModal,
-  viewArtworkDetails,
-  openResellModal,
-  resellArtwork,
-  loadUserPurchases,
-  loadUserArtworks,  
-  hideLoading,
-});
+
+  windows.connectWallet;
+  windows.disconnectWallet;
+  windows.toggleCart;
+  windows.addToCart;
+  windows.removeFromCart;
+  windows.clearCart;
+  windows.checkout;
+  windows.showSection;
+  windows.loadArtworksLive;
+  windows.filterArtworks;
+  windows.submitArtwork;
+  windows.approveAllArtworks;
+  windows.viewReports;
+  windows.exportData;
+  windows.viewAllUsers;
+  windows.viewTransactions;
+  windows.enableUsernameEdit;
+  windows.saveUsername;
+  windows.enableBioEdit;
+  windows.saveBio;
+  windows.showArtworkDetail;
+  windows.closeArtworkModal;
+  windows.showArtistProfile;
+  windows.closeResellModal;
+  windows.confirmResell;
+  windows.closeBlockchainModal;
+  windows.closeDetailsModal;
+  windows.closeArtistModal;
+  windows.viewArtworkDetails;
+  windows.openResellModal;
+  windows.resellArtwork;
+  windows.loadUserPurchases;
+  windows.loadUserArtworks;
+  windows.hideLoading;
+
 
 
 
