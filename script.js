@@ -2652,23 +2652,38 @@ function onWalletReady(callback) {
     }
 }
 // Expose functions to global scope for HTML buttons
-window.connectWallet = connectWallet;
-window.disconnectWallet = disconnectWallet;
-window.toggleCart = toggleCart;
-window.addToCart = addToCart;
-window.removeFromCart = removeFromCart;
-window.checkout = checkout;
-window.showSection = showSection;
-window.loadArtworksLive = loadArtworksLive;
-window.filterArtworks = filterArtworks;
-window.submitArtwork = submitArtwork;
-window.showArtworkDetail = showArtworkDetail;
-window.closeArtworkModal = closeArtworkModal;
-window.showArtistProfile = showArtistProfile;
-window.closeResellModal = closeResellModal;
-window.closeBlockchainModal = closeBlockchainModal;
-window.closeDetailsModal = closeDetailsModal;
-window.closeArtistModal = closeArtistModal;
+// Expose functions to the global window scope
+Object.assign(window, {
+  connectWallet,
+  disconnectWallet, // if defined
+  toggleCart,
+  addToCart,
+  removeFromCart,
+  clearCart,
+  checkout,
+  showSection,
+  loadArtworksLive,
+  filterArtworks,
+  submitArtwork,
+  approveAllArtworks,
+  viewReports,
+  exportData,
+  viewAllUsers,
+  viewTransactions,
+  enableUsernameEdit,
+  saveUsername,
+  enableBioEdit,
+  saveBio,
+  showArtworkDetail,
+  closeArtworkModal,
+  showArtistProfile,
+  closeResellModal,
+  confirmResell,
+  closeBlockchainModal,
+  closeDetailsModal,
+  closeArtistModal,
+});
+
 
 
 
@@ -2696,6 +2711,7 @@ function renderUserPurchases(purchases) {
         </div>
     `).join('');
 }
+
 
 
 
