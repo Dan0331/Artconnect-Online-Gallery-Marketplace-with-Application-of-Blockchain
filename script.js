@@ -360,9 +360,7 @@ window.addEventListener('load', async () => {
 } else {
     localStorage.removeItem('connectedWallet');
 }
-
-            }
-        } catch (err) {
+            } catch (err) {
             console.error('Auto reconnect failed:', err);
         }
     }
@@ -2698,6 +2696,7 @@ function renderUserPurchases(purchases) {
         </div>
     `).join('');
 }
+
 
 
 
