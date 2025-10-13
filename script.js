@@ -2712,11 +2712,12 @@ document.addEventListener("DOMContentLoaded", () => {
     viewArtworkDetails,
     openResellModal,
     resellArtwork,
-    loadUserPurchases,
-    loadUserArtworks,
+    loadUserPurchasesLive,
+    loadUserArtworksLive,
     hideLoading,
   });
 });
+
 
 
 
