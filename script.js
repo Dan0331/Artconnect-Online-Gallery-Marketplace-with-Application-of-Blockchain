@@ -2682,6 +2682,7 @@ Object.assign(window, {
   closeBlockchainModal,
   closeDetailsModal,
   closeArtistModal,
+  viewArtworkDetails,
 });
 
 
@@ -2711,6 +2712,7 @@ function renderUserPurchases(purchases) {
         </div>
     `).join('');
 }
+
 
 
 
