@@ -2678,9 +2678,6 @@ function renderUserPurchases(purchases) {
     `).join('');
 }
 
-
-const addToCart = (item) => { ... };
-const removeFromCart = (item) => { ... };
 // Expose functions to global scope for HTML buttons
 // Expose functions to the global window scope
 Object.assign(window, {
@@ -2719,6 +2716,7 @@ Object.assign(window, {
   loadUserArtworks,  
   hideLoading,
 });
+
 
 
 
