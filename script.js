@@ -2512,10 +2512,10 @@ async function resellArtwork(artId, newPrice) {
         showToast("Artwork listed for resale!", "success");
 
         // Update UI instantly
-        windows.loadUserPurchases(); // refresh purchased list
-        windows.loadUserArtworks();   // refresh selling list
-        windows.loadArtworksLive();
-        windows.hideLoading();
+        loadUserPurchases(); // refresh purchased list
+        loadUserArtworks();   // refresh selling list
+        loadArtworksLive();
+        hideLoading();
 
     } catch (error) {
         console.error("Resell failed:", error);
@@ -2687,6 +2687,10 @@ Object.assign(window, {
   closeResellModal,
   confirmResell,
   resellArtwork,
+  loadUserPurchases,
+  loadUserArtworks,  
+  loadArtworksLive,
+  hideLoading,
 });
 
 
@@ -2716,6 +2720,7 @@ function renderUserPurchases(purchases) {
         </div>
     `).join('');
 }
+
 
 
 
