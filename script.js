@@ -2678,43 +2678,47 @@ function renderUserPurchases(purchases) {
     `).join('');
 }
 
-// Expose functions to global scope for HTML buttons
-Object.assign(window, {
-  connectWallet,
-  disconnectWallet,
-  toggleCart,
-  addToCart,
-  removeFromCart,
-  clearCart,
-  checkout,
-  showSection,
-  loadArtworksLive,
-  filterArtworks,
-  submitArtwork,
-  approveAllArtworks,
-  viewReports,
-  exportData,
-  viewAllUsers,
-  viewTransactions,
-  enableUsernameEdit,
-  saveUsername,
-  enableBioEdit,
-  saveBio,
-  showArtworkDetail,
-  closeArtworkModal,
-  showArtistProfile,
-  closeResellModal,
-  confirmResell,
-  closeBlockchainModal,
-  closeDetailsModal,
-  closeArtistModal,
-  viewArtworkDetails,      // fixed typo
-  openResellModal,
-  resellArtwork,
-  loadUserPurchases,
-  loadUserArtworks,        // fixed capitalization
-  hideLoading,
+// Make sure all functions are defined above this line
+document.addEventListener("DOMContentLoaded", () => {
+  Object.assign(window, {
+    connectWallet,
+    disconnectWallet,
+    toggleCart,
+    addToCart,
+    removeFromCart,
+    clearCart,
+    checkout,
+    showSection,
+    loadArtworksLive,
+    filterArtworks,
+    submitArtwork,
+    approveAllArtworks,
+    viewReports,
+    exportData,
+    viewAllUsers,
+    viewTransactions,
+    enableUsernameEdit,
+    saveUsername,
+    enableBioEdit,
+    saveBio,
+    showArtworkDetail,
+    closeArtworkModal,
+    showArtistProfile,
+    closeResellModal,
+    confirmResell,
+    closeBlockchainModal,
+    closeDetailsModal,
+    closeArtistModal,
+    viewArtworkDetails,
+    openResellModal,
+    resellArtwork,
+    loadUserPurchases,
+    loadUserArtworks,
+    hideLoading,
+  });
 });
+
+
 
 
 
