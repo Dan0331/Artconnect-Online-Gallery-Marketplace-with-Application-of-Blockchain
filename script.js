@@ -2679,7 +2679,6 @@ function renderUserPurchases(purchases) {
 }
 
 // Expose functions to global scope for HTML buttons
-// Expose functions to the global window scope
 Object.assign(window, {
   connectWallet,
   disconnectWallet,
@@ -2709,13 +2708,15 @@ Object.assign(window, {
   closeBlockchainModal,
   closeDetailsModal,
   closeArtistModal,
-  wviewArtworkDetails,
+  viewArtworkDetails,      // fixed typo
   openResellModal,
   resellArtwork,
   loadUserPurchases,
-  LoadUserArtworks,
+  loadUserArtworks,        // fixed capitalization
   hideLoading,
-}};
+});
+
+
 
 
 
