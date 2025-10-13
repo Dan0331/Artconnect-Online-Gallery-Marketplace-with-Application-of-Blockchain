@@ -2651,11 +2651,41 @@ function onWalletReady(callback) {
         });
     }
 }
+
+
+function waitForFirebase() {
+  return new Promise(resolve => {
+    const check = () => {
+      if (window.db) resolve(window.db);
+      else setTimeout(check, 100);
+    };
+    check();
+  });
+}
+function renderUserPurchases(purchases) {
+    const purchasesGrid = document.getElementById('userPurchases');
+    if (!purchasesGrid) return;
+
+    if (!Array.isArray(purchases)) purchases = [];
+    
+    purchasesGrid.innerHTML = purchases.map(p => `
+        <div class="art-card">
+            <img src="${p.image || ''}" alt="${p.title || 'Untitled'}">
+            <h3>${p.title || 'Untitled'}</h3>
+            <p>${p.artist || 'Unknown'}</p>
+            <p>${p.price ? p.price + ' ETH' : ''}</p>
+        </div>
+    `).join('');
+}
+
+
+const addToCart = (item) => { ... };
+const removeFromCart = (item) => { ... };
 // Expose functions to global scope for HTML buttons
 // Expose functions to the global window scope
 Object.assign(window, {
   connectWallet,
-  disconnectWallet, // if defined
+  disconnectWallet,
   toggleCart,
   addToCart,
   removeFromCart,
@@ -2684,42 +2714,12 @@ Object.assign(window, {
   closeArtistModal,
   viewArtworkDetails,
   openResellModal,
-  closeResellModal,
-  confirmResell,
   resellArtwork,
   loadUserPurchases,
   loadUserArtworks,  
-  loadArtworksLive,
   hideLoading,
 });
 
-
-
-
-function waitForFirebase() {
-  return new Promise(resolve => {
-    const check = () => {
-      if (window.db) resolve(window.db);
-      else setTimeout(check, 100);
-    };
-    check();
-  });
-}
-function renderUserPurchases(purchases) {
-    const purchasesGrid = document.getElementById('userPurchases');
-    if (!purchasesGrid) return;
-
-    if (!Array.isArray(purchases)) purchases = [];
-    
-    purchasesGrid.innerHTML = purchases.map(p => `
-        <div class="art-card">
-            <img src="${p.image || ''}" alt="${p.title || 'Untitled'}">
-            <h3>${p.title || 'Untitled'}</h3>
-            <p>${p.artist || 'Unknown'}</p>
-            <p>${p.price ? p.price + ' ETH' : ''}</p>
-        </div>
-    `).join('');
-}
 
 
 
