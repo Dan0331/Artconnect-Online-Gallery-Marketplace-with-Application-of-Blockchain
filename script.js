@@ -2683,6 +2683,7 @@ Object.assign(window, {
   closeDetailsModal,
   closeArtistModal,
   viewArtworkDetails,
+  openResellModal,
 });
 
 
@@ -2712,6 +2713,7 @@ function renderUserPurchases(purchases) {
         </div>
     `).join('');
 }
+
 
 
 
