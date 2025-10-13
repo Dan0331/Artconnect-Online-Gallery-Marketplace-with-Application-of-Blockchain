@@ -790,6 +790,7 @@ function closeArtworkModal() {
     document.getElementById('artworkModal').style.display = 'none';
 }
 
+
 // Cart functionality
 function addToCart(artworkId) {
     const artwork = [...submittedArtworks].find(item => String(item.id) === String(artworkId)); // , ...artworkData].find(item => item.id === artworkId);
@@ -2717,6 +2718,7 @@ document.addEventListener("DOMContentLoaded", () => {
     hideLoading,
   });
 });
+
 
 
 
