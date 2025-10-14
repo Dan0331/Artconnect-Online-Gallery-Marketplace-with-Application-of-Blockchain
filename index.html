@@ -150,8 +150,18 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="artworkDimensions">Dimensions *</label>
-                            <input type="text" id="artworkDimensions" required placeholder='e.g., 24" x 36" or 1920x1080px'>
+                        <label for="artworkDimensions">Resolution / Dimension *</label>
+                            <select id="artworkDimensions" required>
+                                <option value="">-- Select Resolution --</option>
+                                <option value="1280x720 (HD)">HD (1280×720)</option>
+                                <option value="1920x1080 (Full HD)">Full HD (1920×1080)</option>
+                                <option value="2560x1440 (QHD)">QHD / 2K (2560×1440)</option>
+                                <option value="3840x2160 (4K)">4K UHD (3840×2160)</option>
+                                <option value="7680x4320 (8K)">8K UHD (7680×4320)</option>
+                                <option value="1080x1080 (Square)">Square (1080×1080)</option>
+                                <option value="1080x1350 (Portrait)">Portrait (1080×1350)</option>
+                                <option value="1920x1080 (Landscape)">Landscape (1920×1080)</option>
+                            </select>
                         </div>
 
                         <div class="submission-guidelines">
@@ -554,8 +564,8 @@
   <div class="loading-spinner"></div>
   <p class="loading-text">Processing your transaction...</p>
 </div>
-
-<!-- ✅ Firebase must come before your main script -->
+    <!-- Firebase Initialization and App Logic -->
+   <!-- ✅ Firebase must come before your main script -->
 <script type="module">
   import { 
     initializeApp 
@@ -611,12 +621,16 @@
 
 <!-- ✅ Your main script (must be loaded last) -->
 <script type="module" src="script.js"></script>
+<!-- Toast notifications -->
+<div id="toastContainer" style="
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+"></div>
 
 </body>
 </html>
-
-
-
-
-
-

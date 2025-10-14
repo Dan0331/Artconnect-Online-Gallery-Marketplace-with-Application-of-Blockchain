@@ -8,6 +8,16 @@ let isAdmin = false;
 const USER_DISCONNECTED_KEY = 'walletDisconnectedByUser';
 let unsubscribeArtworks = null;
 let unsubscribePurchases = null;
+import { 
+  collection, 
+  onSnapshot, 
+  doc, 
+  setDoc, 
+  getDoc, 
+  deleteDoc, 
+  runTransaction 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 
 // 🔹 Global wallet recovery after refresh (respects manual logout)
 window.addEventListener("DOMContentLoaded", async () => {
@@ -95,8 +105,8 @@ const blockchainDetails = {
 
 //       // Preload user data immediately
 //       await loadUserProfileFromDB(walletAddress);
-//       await loadUserArtworks(walletAddress);
-//       await loadUserPurchases(walletAddress);
+//       await loadUserArtworksLive(walletAddress);
+//       await loadUserPurchasesLive(walletAddress);
 //     }
 
 //     if (typeof window.ethereum !== "undefined") {
@@ -111,8 +121,8 @@ const blockchainDetails = {
 
 //         // Refresh user data if needed
 //         await loadUserProfileFromDB(walletAddress);
-//         await loadUserArtworks(walletAddress);
-//         await loadUserPurchases(walletAddress);
+//         await loadUserArtworksLive(walletAddress);
+//         await loadUserPurchasesLive(walletAddress);
 //       } else {
 //         console.log("No wallet connected on reload.");
 //       }
@@ -123,35 +133,6 @@ const blockchainDetails = {
 // });
 
 
-
-// 🔹 Helper to fetch and update user profile after wallet connect
-//async function refreshUserProfile() {
- //   if (!walletConnected || !walletAddress) return;
-
-//    try {
-        // Example: fetch user profile from your backend using walletAddress
-//     const response = await fetch(`/api/getUserProfile?wallet=${walletAddress}`);
-//        if (!response.ok) throw new Error('Failed to fetch profile');
-
-//        const profileData = await response.json();
-
-        // Update your UI with profile data
-        // Replace these IDs with your actual profile DOM elements
- //       document.getElementById('profileName').textContent = profileData.name || 'Unnamed';
-//        document.getElementById('profileAvatar').src = profileData.avatar || '/default-avatar.png';
-
-  //      console.log('Profile updated for wallet:', walletAddress);
-   // } catch (err) {
-     //   console.error('Failed to refresh user profile:', err);
-    //}
-//}
-
-// 🔹 Global constants & state
-
-
-/**
- * Initialize Firestore live listeners
- */
 function initFirestoreListeners() {
     // 🔹 Unsubscribe previous listeners to avoid duplicates
     if (unsubscribeArtworks) unsubscribeArtworks();
@@ -400,18 +381,6 @@ window.ethereum.on('accountsChanged', (accounts) => {
     });
 }
 
-// 🔹 Wait for wallet to finish loading before using it in other scripts
-/*function onWalletReady(callback) {
-    if (walletConnected && walletAddress) {
-        callback(walletAddress);
-    } else {
-        document.addEventListener('walletReady', () => callback(walletAddress), { once: true });
-    }
-}
-*/
-
-
-
 function isValidEthereumAddress(address) {
     return /^0x[a-fA-F0-9]{40}$/.test(address);
 }
@@ -460,7 +429,6 @@ async function saveUserToFirestore(walletAddress) {
         console.log("User already exists:", walletAddress);
     }
 }
-
 
 
 async function sendPayment(toAddress, amount) {
@@ -566,42 +534,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Artwork functionality
-/*async function loadArtworks() {
-    try {
-        // Fetch artworks from Firestore
-        const snapshot = await getDocs(collection(window.db, "artworks"));
-
-        submittedArtworks = []; // reset before reloading
-        snapshot.forEach(docSnap => {
-            const art = docSnap.data();
-            // Ensure each doc has an id (use Firestore's id if not present)
-            submittedArtworks.push({
-                id: art.id || docSnap.id,
-                ...art
-            });
-        });
-
-        // Save to localStorage for offline support
-        localStorage.setItem('user_submitted_artwork', JSON.stringify(submittedArtworks));
-
-        // Merge static demo + db artworks (optional)
-        //const combinedArtworks = [...artworkData, ...submittedArtworks];
-        //currentArtworks = combinedArtworks;
-
-        // If you want ONLY db artworks, comment out the line above and use this:
-        currentArtworks = submittedArtworks;
-
-        renderArtworks(currentArtworks);
-
-    } catch (error) {
-        console.error("Error loading artworks:", error);
-        showToast("Failed to load artworks from server", "error");
-    }
-
-}*/
-import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
 async function loadArtworksLive() {
   try {
     // 🔹 Wait for Firebase initialization before using Firestore
@@ -637,7 +569,6 @@ async function loadArtworksLive() {
   }
 }
 
-
 function getImageUrl(url) {
     if (!url) return '';
 
@@ -664,18 +595,35 @@ function renderArtworks(artworks) {
         return;
     }
 
-    artworkGrid.innerHTML = artworks.map(artwork => `
+    artworkGrid.innerHTML = artworks.map(artwork => {
+        // ✅ Determine status label based on Firestore field
+        let statusLabel = "BRAND NEW";
+        let statusClass = "brand-new";
+
+        if (artwork.status?.toLowerCase() === "resold") {
+            statusLabel = "RESOLD";
+            statusClass = "resold";
+        } else if (artwork.status?.toLowerCase() === "sold") {
+            statusLabel = "SOLD";
+            statusClass = "sold";
+        }
+
+        // ✅ Disable Add to Cart if artwork belongs to current user
+        const isOwner = artwork.sellerId?.toLowerCase() === walletAddress?.toLowerCase();
+        const isOutOfStock = !artwork.inStock;
+
+        return `
         <div class="artwork-card">
             <div class="artwork-image">
                 <img src="${getImageUrl(artwork.imageUrl)}" alt="${artwork.title}" loading="lazy">
-                ${!artwork.inStock ? '<div class="stock-badge">Out of Stock</div>' : ''}
+                ${isOutOfStock ? '<div class="stock-badge">Out of Stock</div>' : ''}
             </div>
             <div class="artwork-info">
                 <div class="artwork-header">
                     <h3 class="artwork-title">${artwork.title}</h3>
                 </div>
                 <p class="artwork-artist">by ${artwork.artist}</p>
-                <p class="artwork-meta">${artwork.category} • ${artwork.year} • ${artwork.dimensions}</p>
+                <p class="artwork-meta">${artwork.category} • ${artwork.year} • ${artwork.dimension}</p>
                 <p class="artwork-description">${artwork.description}</p>
                 <div class="artwork-footer">
                     <span class="artwork-price">${artwork.price} tETH</span>
@@ -684,17 +632,22 @@ function renderArtworks(artworks) {
                     <button class="btn btn-secondary" onclick="showArtworkDetail('${artwork.id}')">
                         <i class="fas fa-eye"></i> View Details
                     </button>
-                    <button class="btn btn-primary add-to-basket-btn" onclick="addToCart('${artwork.id}')" ${!artwork.inStock ? 'disabled' : ''}>
-                        <i class="fas fa-shopping-basket"></i> ${artwork.inStock ? 'Add to Cart' : 'Out of Stock'}
+                    <button class="btn btn-primary add-to-basket-btn" 
+                        onclick="addToCart('${artwork.id}')"
+                        ${isOutOfStock || isOwner ? 'disabled' : ''}>
+                        <i class="fas fa-shopping-basket"></i> 
+                        ${isOutOfStock ? 'Out of Stock' : isOwner ? 'Your Artwork' : 'Add to Cart'}
                     </button>
                 </div>
                 <div class="artwork-status">
-                    <span class="status-badge ${getArtworkStatus(artwork.id)}">${getArtworkStatusText(artwork.id)}</span>
+                    <span class="status-badge ${statusClass}">${statusLabel}</span>
                 </div>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
+
 
 function filterArtworks() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
@@ -752,7 +705,7 @@ function showArtworkDetail(artworkId) {
             <div class="artwork-detail-meta">
                 <span>${artwork.category}</span>
                 <span>${artwork.year}</span>
-                <span>${artwork.dimensions}</span>
+                <span>${artwork.dimension}</span>
             </div>
             <p class="artwork-detail-description">${artwork.description}</p>
             <div class="artwork-status-detail">
@@ -764,8 +717,8 @@ function showArtworkDetail(artworkId) {
                     <button class="btn btn-secondary" onclick="showArtistProfile('${(artwork.sellerId||'').toLowerCase()}')">
                         <i class="fas fa-user"></i> View Artist
                     </button>
-                    <button class="btn btn-secondary" onclick="showBlockchainDetails(${artwork.id})">
-                        <i class="fab fa-ethereum"></i> Blockchain
+                    <button class="btn btn-secondary blockchain-btn" data-id="${artwork.id}">
+                      <i class="fab fa-ethereum"></i> History
                     </button>
                     <button class="btn btn-primary enhanced-add-btn" onclick="addToCart(${artwork.id}); closeArtworkModal();" ${!artwork.inStock ? 'disabled' : ''}>
                         <i class="fas fa-shopping-basket"></i> ${artwork.inStock ? 'Add to Basket' : 'Out of Stock'}
@@ -782,6 +735,15 @@ function showArtworkDetail(artworkId) {
 <new_content>
         </div>
     `;
+
+  const blockchainBtn = detailContainer.querySelector(".blockchain-btn");
+  
+  if (blockchainBtn) {
+    blockchainBtn.addEventListener("click", (e) => {
+      const artId = e.currentTarget.dataset.id;
+      showBlockchainDetails(artId);
+    });
+  }
     
     modal.style.display = 'block';
 }
@@ -789,7 +751,6 @@ function showArtworkDetail(artworkId) {
 function closeArtworkModal() {
     document.getElementById('artworkModal').style.display = 'none';
 }
-
 
 // Cart functionality
 function addToCart(artworkId) {
@@ -810,7 +771,7 @@ function addToCart(artworkId) {
             sellerId: artwork.sellerId,
             category: artwork.category || "Uncategorized",
             description: artwork.description || "",
-            dimension: artwork.dimensions || "",
+            dimension: artwork.dimension || "",
             year: artwork.year || "",
             quantity: 1
         });
@@ -869,7 +830,7 @@ function toggleCart() {
         renderCartItems();
     }
 }
-/*
+
 function renderCartItems() {
     const cartItems = document.getElementById('cartItems');
     const cartTotal = document.getElementById('cartTotal');
@@ -877,8 +838,8 @@ function renderCartItems() {
     if (cart.length === 0) {
         cartItems.innerHTML = `
             <div class="empty-cart">
-                <i class="fas fa-shopping-cart" style="font-size: 3rem; margin-bottom: 1rem; color: #94a3b8;"></i>
-                <h3>Your cart is empty</h3>
+                <i class="fas fa-shopping-basket" style="font-size: 3rem; margin-bottom: 1rem; color: #94a3b8;"></i>
+                <h3>Your basket is empty</h3>
                 <p>Add some artworks to get started</p>
             </div>
         `;
@@ -895,115 +856,151 @@ function renderCartItems() {
             <div class="cart-item-info">
                 <h4 class="cart-item-title">${item.title}</h4>
                 <p class="cart-item-artist">by ${item.artist}</p>
-                <p class="cart-item-price">${item.price} tETH</p>
+                <p class="cart-item-price">${item.price} ETH</p>
+                <span class="nft-badge">Unique Artwork</span>
             </div>
             <div class="cart-item-actions">
-                <button class="remove-btn" onclick="removeFromCart(${item.id})">Remove</button>
+                <button class="remove-btn enhanced-remove-btn" onclick="removeFromCart('${item.id}')">
+                    <i class="fas fa-times"></i> Remove
+                </button>
             </div>
         </div>
     `).join('');
 }
-*/
-async function checkout() {
-    if (!walletConnected || !walletAddress) {
-        return onWalletReady(async (address) => {
-            console.log("Wallet was not ready — now connected:", address);
-            await checkout();
-        });
-    }
 
-    if (cart.length === 0) {
-        showToast('Your cart is empty', 'error');
-        return;
-    }
-
-    showLoading();
-    showLoadingText("Preparing your transactions...");
-    showToast('Processing payment...', 'warning');
-
-    try {
-        for (let item of cart) {
-            if (!item.sellerId || item.sellerId === "unknown") {
-                console.warn(`Missing sellerId for artwork: ${item.title}`);
-                continue;
-            }
-
-            const totalPrice = item.price * (item.quantity || 1);
-            const sellerAmount = totalPrice; // 100% to artist
-            const today = new Date().toISOString().split("T")[0];
-
-            // 🔹 Pay Seller
-            showLoadingText(`Waiting for MetaMask confirmation to pay seller for "${item.title}"...`);
-            const txSeller = await sendPayment(item.sellerId, sellerAmount);
-            console.log("Transaction sent to seller:", txSeller);
-
-            // Common record for both buyer & seller
-            const recordData = {
-                artwork: {
-                id: item.id,
-                title: item.title,
-                artist: item.artist || "Unknown Artist",
-                price: item.price,
-                category: item.category || "Uncategorized",
-                description: item.description || "",
-                dimension: item.dimension || "N/A",
-                imageUrl: item.imageUrl,
-                year: item.year || "",
-                },
-                buyerId: walletAddress.toLowerCase(),
-                sellerId: item.sellerId.toLowerCase(),
-                timestamp: new Date().toISOString(),
-            };
-
-            // For Seller: Simple sale record (no blockchain info)
-            const sellerRef = doc(db, "users", item.sellerId.toLowerCase(), "artSold", String(item.id));
-            await setDoc(sellerRef, recordData);
-
-            // For Buyer: Enhanced version with blockchain history
-            const artSnap = await getDoc(doc(db, "artworks", String(item.id)));
-            let artData = artSnap.exists() ? artSnap.data() : item;
-
-            const owner_history = Array.isArray(artData.owner_history)
-                ? [...artData.owner_history, { owner: walletAddress.toLowerCase(), date: today, event: "Sold" }]
-                : [
-                    { owner: item.sellerId.toLowerCase(), date: today, event: "Listed" },
-                    { owner: walletAddress.toLowerCase(), date: today, event: "Sold" },
-                ];
-
-            const price_history = Array.isArray(artData.price_history)
-                ? [...artData.price_history, { price: parseFloat(item.price), date: today, event: "Sold" }]
-                : [{ price: parseFloat(item.price), date: today, event: "Sold" }];
-
-            const buyerRef = doc(db, "users", walletAddress.toLowerCase(), "artBought", String(item.id));
-            await setDoc(buyerRef, {
-                ...recordData,
-                current_owner: walletAddress.toLowerCase(),
-                original_owner: artData.original_owner || item.sellerId.toLowerCase(),
-                owner_history,
-                price_history,
-                transaction_hash: txSeller || "",
-            });
-
-            // Delete sold art from seller + global
-            await deleteDoc(doc(db, "artworks", String(item.id)));
-            await deleteDoc(doc(db, "users", item.sellerId.toLowerCase(), "sellingArts", String(item.id)));
-
-            clearCart();
-            toggleCart();
-            showLoadingText("Finalizing your order...");
-
-            setTimeout(() => {
-                hideLoading();
-                showToast('Payment successful! Order confirmed.', 'success');
-                loadArtworksLive();
-            }, 800);
+// Close modals when clicking outside - Enhanced
+window.addEventListener('click', function(event) {
+    const modals = ['cartModal', 'artworkModal', 'blockchainModal', 'artistModal'];
+    
+    modals.forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (event.target === modal) {
+            modal.style.display = 'none';
         }
-    } catch (error) {
-        console.error('Checkout failed:', error);
-        hideLoading();
-        showToast(`Payment failed: ${error.message}`, 'error');
+    });
+});
+
+// 🔒 Secure Firestore Transaction to prevent double purchase
+async function securePurchase(item) {
+  const artRef = doc(db, "artworks", String(item.id));
+
+  try {
+    // 🚫 Prevent self-purchase
+    if (item.sellerId?.toLowerCase() === walletAddress?.toLowerCase()) {
+      showToast("You cannot purchase your own artwork.", "error");
+      return;
     }
+
+    // Step 1: Transaction to atomically mark as sold
+    await runTransaction(db, async (transaction) => {
+      const artSnap = await transaction.get(artRef);
+
+      if (!artSnap.exists()) {
+        throw new Error(`"${item.title}" has already been sold or removed.`);
+      }
+
+      const artData = artSnap.data();
+      if (artData.inStock === false) {
+        throw new Error(`"${item.title}" was just purchased by another user.`);
+      }
+
+      // Mark as sold (prevents double-buy)
+      transaction.update(artRef, { inStock: false, status: "sold" });
+
+      // 💰 Payment process
+      showLoadingText(`Waiting for MetaMask confirmation to pay seller for "${item.title}"...`);
+      const txSeller = await sendPayment(item.sellerId, item.price);
+
+      const today = new Date().toISOString().split("T")[0];
+
+      // Record buyer’s purchase
+      const buyerRef = doc(db, "users", walletAddress.toLowerCase(), "artBought", String(item.id));
+      transaction.set(buyerRef, {
+        artwork: {
+          id: item.id,
+          title: item.title,
+          artist: item.artist || "Unknown Artist",
+          price: item.price,
+          category: item.category || "Uncategorized",
+          description: item.description || "No description available",
+          dimension: item.dimension || "N/A",
+          imageUrl: item.imageUrl,
+          year: item.year || "",
+        },
+        buyerId: walletAddress.toLowerCase(),
+        sellerId: item.sellerId.toLowerCase(),
+        timestamp: new Date().toISOString(),
+        transaction_hash: txSeller,
+      });
+
+      // Remove from seller’s selling list
+      const sellerRef = doc(db, "users", item.sellerId.toLowerCase(), "sellingArts", String(item.id));
+      transaction.delete(sellerRef);
+    });
+
+    // Step 2: Delete from artworks collection
+    await deleteDoc(artRef);
+
+    showToast(`✅ Successfully purchased "${item.title}"!`, "success");
+  } catch (e) {
+    console.error("❌ Secure purchase failed:", e);
+    showToast(e.message, "error");
+    throw e;
+  }
 }
+
+async function checkout() {
+  if (!walletConnected || !walletAddress) {
+    return onWalletReady(async (address) => {
+      console.log("Wallet was not ready — now connected:", address);
+      await checkout();
+    });
+  }
+
+  if (cart.length === 0) {
+    showToast('Your cart is empty', 'error');
+    return;
+  }
+
+  showLoading();
+  showLoadingText("Preparing your transactions...");
+  showToast('Processing payment...', 'warning');
+
+  try {
+    let successfulPurchases = 0;
+
+    for (let item of cart) {
+      try {
+        await securePurchase(item);
+        successfulPurchases++;
+      } catch (err) {
+        console.warn(`Skipping purchase for ${item.title}:`, err.message);
+      }
+    }
+
+    if (successfulPurchases > 0) {
+      clearCart();
+      toggleCart();
+      showLoadingText("Finalizing your order...");
+
+      setTimeout(() => {
+        hideLoading();
+        showToast('Payment successful! Order confirmed.', 'success');
+        loadArtists();
+        loadArtworksLive();
+      }, 800);
+    } else {
+      hideLoading();
+      showToast('No valid purchases were made.', 'info');
+    }
+
+  } catch (error) {
+    console.error('Checkout failed:', error);
+    hideLoading();
+    showToast(`Payment failed: ${error.message}`, 'error');
+  }
+}
+
 
 
 
@@ -1027,6 +1024,11 @@ async function uploadToImgBB(file) {
 }
 
 
+const yearInput = document.getElementById("artworkYear");
+const currentYear = new Date().getFullYear();
+yearInput.max = currentYear;
+
+
 // Submit artwork functionality
 async function submitArtwork(event) {
     event.preventDefault();
@@ -1041,7 +1043,6 @@ async function submitArtwork(event) {
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting...';
     
-
     try {
         const fileInput = document.getElementById('artworkImage');
         const file = fileInput.files[0];
@@ -1053,20 +1054,21 @@ async function submitArtwork(event) {
 
         const imageUrl = await uploadToImgBB(file);
 
-
         const formData = {
-            title: document.getElementById('artworkTitle').value,
+            title: document.getElementById('artworkTitle').value.trim(),
             artist: currentUser?.username || "Unnamed Artist",
-            description: document.getElementById('artworkDescription').value,
-            price: parseFloat(document.getElementById('artworkPrice').value),
-            category: document.getElementById('artworkCategory').value,
-            dimensions: document.getElementById('artworkDimensions').value,
-            year: parseInt(document.getElementById('artworkYear').value),
+            description: document.getElementById('artworkDescription').value.trim(),
+            price: parseFloat(document.getElementById('artworkPrice').value) || 0,
+            category: document.getElementById('artworkCategory').value || "Uncategorized",
+            dimension: document.getElementById('artworkDimensions').value || "Unspecified",
+            year: parseInt(document.getElementById('artworkYear').value) || new Date().getFullYear(),
             imageUrl
         };
         
         // Validate form
         if (!validateSubmissionForm(formData)) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
             return;
         }
 
@@ -1076,28 +1078,33 @@ async function submitArtwork(event) {
         const newArtwork = {
             id: artDocId,
             title: formData.title,
-            artist:formData.artist,
+            artist: formData.artist,
             category: formData.category,
-            dimension: formData.dimensions,
+            dimension: formData.dimension,
             description: formData.description,
             imageUrl: formData.imageUrl,
             sellerId: walletAddress.toLowerCase(),
             original_owner: walletAddress.toLowerCase(),
-            current_price: parseFloat(formData.price) || 0,
+            price: formData.price,
+            year: formData.year,
             inStock: true,
             submittedAt: new Date().toISOString(),
+
+            // ✅ ADD THIS FIELD:
+            status: "new",
+
             owner_history: [
                 {
-                owner: walletAddress.toLowerCase(),
-                date: today,
-                event: "Submitted"
+                    owner: walletAddress.toLowerCase(),
+                    date: today,
+                    event: "Submitted"
                 }
             ],
             price_history: [
                 {
-                price: parseFloat(formData.price) || 0,
-                date: today,
-                event: "Listed"
+                    price: parseFloat(formData.price) || 0,
+                    date: today,
+                    event: "Listed"
                 }
             ]
         };
@@ -1118,7 +1125,7 @@ async function submitArtwork(event) {
         showToast('Artwork submitted successfully!', 'success');
         showSection('gallery');
         loadArtworksLive();
-        //setTimeout(() => location.reload(), 1000);
+        setTimeout(() => location.reload(), 1000);
         
     } catch (error) {
         console.error('Submission failed:', error);
@@ -1129,30 +1136,6 @@ async function submitArtwork(event) {
     }
 }
 
-function validateSubmissionForm(formData) {
-    if (!formData.title || !formData.artist || !formData.description || 
-        !formData.imageUrl || !formData.category || !formData.dimensions) {
-        showToast('Please fill in all required fields', 'error');
-        return false;
-    }
-    
-    if (isNaN(formData.price) || formData.price <= 0) {
-        showToast('Please enter a valid price', 'error');
-        return false;
-    }
-    
-    if (isNaN(formData.year) || formData.year < 1800 || formData.year > new Date().getFullYear()) {
-        showToast('Please enter a valid year', 'error');
-        return false;
-    }
-
-    if (!formData.imageUrl.startsWith("http")) {
-        showToast('Invalid image link. Upload may have failed.', 'error');
-        return false;
-    }
-    
-    return true;
-}
 
 // Contact form functionality
 function sendMessage(event) {
@@ -1287,91 +1270,168 @@ document.addEventListener('DOMContentLoaded', function() {
 // }
 
 // 1) NEW loadArtists() - group by sellerId (wallet) and pull username & bio from users/{wallet}
+// async function loadArtists() {
+//   const artistsGrid = document.getElementById('artistsGrid');
+//   if (!artistsGrid) return;
+
+//   // If no artworks, short-circuit
+//   if (!submittedArtworks || submittedArtworks.length === 0) {
+//     artistsGrid.innerHTML = `<p>No artists found</p>`;
+//     return;
+//   }
+
+//   // Build a set of unique seller wallet addresses
+//   const sellerSet = new Set();
+//   submittedArtworks.forEach(a => {
+//     if (a.sellerId) sellerSet.add(a.sellerId.toLowerCase());
+//   });
+//   const sellers = Array.from(sellerSet).map(w => w.toLowerCase());
+
+//   try {
+//     // Fetch all user docs in parallel for those wallets
+//     const userDocPromises = sellers.map(w => getDoc(doc(db, 'users', w)));
+//     const userDocs = await Promise.all(userDocPromises);
+
+//     const artists = sellers.map((walletAddr, idx) => {
+//       const userSnap = userDocs[idx];
+//       const userData = (userSnap && userSnap.exists()) ? userSnap.data() : {};
+//       const username = userData.username ||
+//         (submittedArtworks.find(a => a.sellerId?.toLowerCase() === walletAddr)?.artist) ||
+//         'Unnamed Artist';
+//       const bio = userData.bio || 'This artist has not added a bio yet.';
+//       const artworks = submittedArtworks.filter(a => a.sellerId?.toLowerCase() === walletAddr);
+//       const totalSales = artworks.reduce((s, art) => s + (parseFloat(art.price) || 0), 0);
+//       const joinedDate = userData.joinedAt ? new Date(userData.joinedAt).getFullYear() : '—';
+
+//       return {
+//         walletAddr,
+//         username,
+//         bio,
+//         artworks,
+//         totalSales,
+//         joinedDate
+//       };
+//     });
+
+//     // Sort by artwork count (most active first)
+//     artists.sort((a, b) => b.artworks.length - a.artworks.length);
+
+//     // Render
+//     // <div class="artist-card" onclick="showArtistProfile('${artist.walletAddr}')">
+//     //     <div class="artist-header">
+//     //       <h3>${artist.username}</h3>
+//     //       <small class="wallet-display">${artist.walletAddr.slice(0,6)}...${artist.walletAddr.slice(-4)}</small>
+//     //     </div>
+//     //     <p>${artist.bio}</p>
+//     //     <div class="artist-meta">
+//     //       <small>${artist.artworks.length} Artworks</small>
+//     //       <small>${artist.totalSales.toFixed(2)} tETH Sales</small>
+//     //       <small>${artist.joinedDate} Joined</small>
+//     //     </div>
+//     //   </div>
+// artistsGrid.innerHTML = artists.map(artist => `
+//   <div class="artist-card" onclick="showArtistProfile('${artist.walletAddr}')">
+//     <div class="artist-header">
+//         <div class="artist-avatar">${artist.username.charAt(0).toUpperCase()}</div>
+//         <div class="artist-info">
+//           <h3>${artist.username}</h3>
+//           <p>${artist.bio ? artist.bio.slice(0, 40) + "..." : "No bio yet."}</p>
+//         </div>
+//     </div>
+
+//     <div class="artist-stats">
+//         <span><i class="fa-solid fa-image"></i> ${artist.artworks?.length || 0} Artworks</span>
+//         <span><i class="fa-brands fa-ethereum"></i> ${(artist.totalSales || 0).toFixed(3)} tETH</span>
+//     </div>
+
+//     <div class="artist-stats">
+//         <span><i class="fa-regular fa-calendar"></i> ${artist.joinedDate || "-"}</span>
+//     </div>
+//   </div>
+// `).join('');
+
+//   } catch (err) {
+//     console.error('Error loading artists:', err);
+//     artistsGrid.innerHTML = `<p style="color:red;">Failed to load artists.</p>`;
+//   }
+// }
+
+
 async function loadArtists() {
   const artistsGrid = document.getElementById('artistsGrid');
   if (!artistsGrid) return;
 
-  // If no artworks, short-circuit
   if (!submittedArtworks || submittedArtworks.length === 0) {
     artistsGrid.innerHTML = `<p>No artists found</p>`;
     return;
   }
 
-  // Build a set of unique seller wallet addresses
+  // Build unique seller IDs
   const sellerSet = new Set();
   submittedArtworks.forEach(a => {
     if (a.sellerId) sellerSet.add(a.sellerId.toLowerCase());
   });
-  const sellers = Array.from(sellerSet).map(w => w.toLowerCase());
+  const sellers = Array.from(sellerSet);
 
   try {
-    // Fetch all user docs in parallel for those wallets
-    const userDocPromises = sellers.map(w => getDoc(doc(db, 'users', w)));
-    const userDocs = await Promise.all(userDocPromises);
+    const artists = [];
 
-    const artists = sellers.map((walletAddr, idx) => {
-      const userSnap = userDocs[idx];
-      const userData = (userSnap && userSnap.exists()) ? userSnap.data() : {};
+    for (const walletAddr of sellers) {
+      // 1️⃣ Load user data
+      const userSnap = await getDoc(doc(db, "users", walletAddr));
+      const userData = userSnap.exists() ? userSnap.data() : {};
+
+      // 2️⃣ Load sold artworks
+      const soldSnap = await getDocs(collection(db, "users", walletAddr, "artSold"));
+      const soldArtworks = soldSnap.docs.map(d => d.data());
+      const totalSales = soldArtworks.reduce((sum, art) => sum + (parseFloat(art.artwork?.price) || 0), 0);
+
+      // 3️⃣ Load artist profile info
       const username = userData.username ||
-        (submittedArtworks.find(a => a.sellerId?.toLowerCase() === walletAddr)?.artist) ||
-        'Unnamed Artist';
-      const bio = userData.bio || 'This artist has not added a bio yet.';
+        submittedArtworks.find(a => a.sellerId?.toLowerCase() === walletAddr)?.artist ||
+        "Unnamed Artist";
+      const bio = userData.bio || "This artist has not added a bio yet.";
       const artworks = submittedArtworks.filter(a => a.sellerId?.toLowerCase() === walletAddr);
-      const totalSales = artworks.reduce((s, art) => s + (parseFloat(art.price) || 0), 0);
-      const joinedDate = userData.joinedAt ? new Date(userData.joinedAt).getFullYear() : '—';
+      const joinedDate = userData.joinedAt ? new Date(userData.joinedAt).getFullYear() : "—";
 
-      return {
+      artists.push({
         walletAddr,
         username,
         bio,
         artworks,
         totalSales,
-        joinedDate
-      };
-    });
+        joinedDate,
+      });
+    }
 
-    // Sort by artwork count (most active first)
     artists.sort((a, b) => b.artworks.length - a.artworks.length);
 
-    // Render
-    // <div class="artist-card" onclick="showArtistProfile('${artist.walletAddr}')">
-    //     <div class="artist-header">
-    //       <h3>${artist.username}</h3>
-    //       <small class="wallet-display">${artist.walletAddr.slice(0,6)}...${artist.walletAddr.slice(-4)}</small>
-    //     </div>
-    //     <p>${artist.bio}</p>
-    //     <div class="artist-meta">
-    //       <small>${artist.artworks.length} Artworks</small>
-    //       <small>${artist.totalSales.toFixed(2)} tETH Sales</small>
-    //       <small>${artist.joinedDate} Joined</small>
-    //     </div>
-    //   </div>
-artistsGrid.innerHTML = artists.map(artist => `
-  <div class="artist-card" onclick="showArtistProfile('${artist.walletAddr}')">
-    <div class="artist-header">
-        <div class="artist-avatar">${artist.username.charAt(0).toUpperCase()}</div>
-        <div class="artist-info">
-          <h3>${artist.username}</h3>
-          <p>${artist.bio ? artist.bio.slice(0, 40) + "..." : "No bio yet."}</p>
+    // 4️⃣ Render the UI
+    artistsGrid.innerHTML = artists.map(artist => `
+      <div class="artist-card" onclick="showArtistProfile('${artist.walletAddr}')">
+        <div class="artist-header">
+          <div class="artist-avatar">${artist.username.charAt(0).toUpperCase()}</div>
+          <div class="artist-info">
+            <h3>${artist.username}</h3>
+            <p>${artist.bio ? artist.bio.slice(0, 40) + "..." : "No bio yet."}</p>
+          </div>
         </div>
-    </div>
-
-    <div class="artist-stats">
-        <span><i class="fa-solid fa-image"></i> ${artist.artworks?.length || 0} Artworks</span>
-        <span><i class="fa-brands fa-ethereum"></i> ${(artist.totalSales || 0).toFixed(3)} tETH</span>
-    </div>
-
-    <div class="artist-stats">
-        <span><i class="fa-regular fa-calendar"></i> ${artist.joinedDate || "-"}</span>
-    </div>
-  </div>
-`).join('');
+        <div class="artist-stats">
+          <span><i class="fa-solid fa-image"></i> ${artist.artworks.length} Artworks</span>
+          <span><i class="fa-brands fa-ethereum"></i> ${artist.totalSales.toFixed(3)} tETH</span>
+        </div>
+        <div class="artist-stats">
+          <span><i class="fa-regular fa-calendar"></i> ${artist.joinedDate}</span>
+        </div>
+      </div>
+    `).join('');
 
   } catch (err) {
     console.error('Error loading artists:', err);
     artistsGrid.innerHTML = `<p style="color:red;">Failed to load artists.</p>`;
   }
 }
+
 
 
 // async function showArtistProfile(walletAddr) {
@@ -1598,93 +1658,93 @@ function closeArtistModal() {
     document.getElementById('artistModal').style.display = 'none';
 }
 
-// Blockchain Details Functions
-function showBlockchainDetails(artworkId) {
-    const artwork = [...submittedArtworks].find(item => item.id === artworkId); // , ...artworkData].find(item => item.id === artworkId);
-    const blockchain = blockchainDetails[artworkId] || generateMockBlockchainData(artworkId);
+//Blockchain Details Functions
+// function showBlockchainDetails(artworkId) {
+//     const artwork = [...submittedArtworks].find(item => item.id === artworkId); // , ...artworkData].find(item => item.id === artworkId);
+//     const blockchain = blockchainDetails[artworkId] || generateMockBlockchainData(artworkId);
     
-    const modal = document.getElementById('blockchainModal');
-    const detailContainer = document.getElementById('blockchainDetail');
+//     const modal = document.getElementById('blockchainModal');
+//     const detailContainer = document.getElementById('blockchainDetail');
     
-    detailContainer.innerHTML = `
-        <div class="blockchain-header">
-            <h2><i class="fab fa-ethereum"></i> Blockchain Details</h2>
-            <h3>${artwork.title}</h3>
-        </div>
+//     detailContainer.innerHTML = `
+//         <div class="blockchain-header">
+//             <h2><i class="fab fa-ethereum"></i> Blockchain Details</h2>
+//             <h3>${artwork.title}</h3>
+//         </div>
         
-        <div class="blockchain-info">
-            <div class="blockchain-section">
-                <h4>Token Information</h4>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <label>Token ID:</label>
-                        <span class="copyable" onclick="copyToClipboard('${blockchain.tokenId}')">${blockchain.tokenId}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Contract Address:</label>
-                        <span class="copyable" onclick="copyToClipboard('${blockchain.contractAddress}')">${blockchain.contractAddress}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Chain:</label>
-                        <span><i class="fab fa-ethereum"></i> ${blockchain.chain}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Status:</label>
-                        <span class="status-badge ${blockchain.status}">${blockchain.status.toUpperCase()}</span>
-                    </div>
-                </div>
-            </div>
+//         <div class="blockchain-info">
+//             <div class="blockchain-section">
+//                 <h4>Token Information</h4>
+//                 <div class="info-grid">
+//                     <div class="info-item">
+//                         <label>Token ID:</label>
+//                         <span class="copyable" onclick="copyToClipboard('${blockchain.tokenId}')">${blockchain.tokenId}</span>
+//                     </div>
+//                     <div class="info-item">
+//                         <label>Contract Address:</label>
+//                         <span class="copyable" onclick="copyToClipboard('${blockchain.contractAddress}')">${blockchain.contractAddress}</span>
+//                     </div>
+//                     <div class="info-item">
+//                         <label>Chain:</label>
+//                         <span><i class="fab fa-ethereum"></i> ${blockchain.chain}</span>
+//                     </div>
+//                     <div class="info-item">
+//                         <label>Status:</label>
+//                         <span class="status-badge ${blockchain.status}">${blockchain.status.toUpperCase()}</span>
+//                     </div>
+//                 </div>
+//             </div>
             
-            <div class="blockchain-section">
-                <h4>Price History</h4>
-                <div class="price-chart">
-                    ${blockchain.priceHistory.map(entry => `
-                        <div class="price-entry">
-                            <span class="price-date">${entry.date}</span>
-                            <span class="price-amount">${entry.price} ETH</span>
-                            <span class="price-event">${entry.event}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
+//             <div class="blockchain-section">
+//                 <h4>Price History</h4>
+//                 <div class="price-chart">
+//                     ${blockchain.priceHistory.map(entry => `
+//                         <div class="price-entry">
+//                             <span class="price-date">${entry.date}</span>
+//                             <span class="price-amount">${entry.price} ETH</span>
+//                             <span class="price-event">${entry.event}</span>
+//                         </div>
+//                     `).join('')}
+//                 </div>
+//             </div>
             
-            <div class="blockchain-section">
-                <h4>Ownership History</h4>
-                <div class="ownership-history">
-                    ${blockchain.ownershipHistory.map(entry => `
-                        <div class="ownership-entry">
-                            <span class="owner-address copyable" onclick="copyToClipboard('${entry.owner}')">${entry.owner}</span>
-                            <span class="ownership-date">${entry.date}</span>
-                            <span class="ownership-event">${entry.event}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        </div>
-    `;
+//             <div class="blockchain-section">
+//                 <h4>Ownership History</h4>
+//                 <div class="ownership-history">
+//                     ${blockchain.ownershipHistory.map(entry => `
+//                         <div class="ownership-entry">
+//                             <span class="owner-address copyable" onclick="copyToClipboard('${entry.owner}')">${entry.owner}</span>
+//                             <span class="ownership-date">${entry.date}</span>
+//                             <span class="ownership-event">${entry.event}</span>
+//                         </div>
+//                     `).join('')}
+//                 </div>
+//             </div>
+//         </div>
+//     `;
     
-    modal.style.display = 'block';
-}
+//     modal.style.display = 'block';
+// }
 
-function closeBlockchainModal() {
-    document.getElementById('blockchainModal').style.display = 'none';
-}
+// function closeBlockchainModal() {
+//     document.getElementById('blockchainModal').style.display = 'none';
+// }
 
-function generateMockBlockchainData(artworkId) {
-    return {
-        tokenId: `0x${artworkId.toString(16).padStart(16, '0')}`,
-        contractAddress: "0x495f947276749Ce646f68AC8c248420045cb7b5e",
-        chain: "Ethereum",
-        status: Math.random() > 0.5 ? "new" : "resold",
-        priceHistory: [
-            { date: "2024-01-15", price: (Math.random() * 2 + 0.5).toFixed(3), event: "Minted" },
-            { date: "2024-02-20", price: (Math.random() * 2 + 0.8).toFixed(3), event: "Price Update" }
-        ],
-        ownershipHistory: [
-            { owner: `0x${Math.random().toString(16).substr(2, 8)}...${Math.random().toString(16).substr(2, 4)}`, date: "2024-01-15", event: "Minted" }
-        ]
-    };
-}
+// function generateMockBlockchainData(artworkId) {
+//     return {
+//         tokenId: `0x${artworkId.toString(16).padStart(16, '0')}`,
+//         contractAddress: "0x495f947276749Ce646f68AC8c248420045cb7b5e",
+//         chain: "Ethereum",
+//         status: Math.random() > 0.5 ? "new" : "resold",
+//         priceHistory: [
+//             { date: "2024-01-15", price: (Math.random() * 2 + 0.5).toFixed(3), event: "Minted" },
+//             { date: "2024-02-20", price: (Math.random() * 2 + 0.8).toFixed(3), event: "Price Update" }
+//         ],
+//         ownershipHistory: [
+//             { owner: `0x${Math.random().toString(16).substr(2, 8)}...${Math.random().toString(16).substr(2, 4)}`, date: "2024-01-15", event: "Minted" }
+//         ]
+//     };
+// }
 
 function getArtworkStatus(artworkId) {
     const blockchain = blockchainDetails[artworkId];
@@ -1757,58 +1817,6 @@ function viewTransactions() {
     showToast('Loading transaction history...', 'info');
 }
 
-// Enhanced cart functionality with basket branding
-
-function renderCartItems() {
-    const cartItems = document.getElementById('cartItems');
-    const cartTotal = document.getElementById('cartTotal');
-    
-    if (cart.length === 0) {
-        cartItems.innerHTML = `
-            <div class="empty-cart">
-                <i class="fas fa-shopping-basket" style="font-size: 3rem; margin-bottom: 1rem; color: #94a3b8;"></i>
-                <h3>Your basket is empty</h3>
-                <p>Add some artworks to get started</p>
-            </div>
-        `;
-        cartTotal.textContent = '0.000';
-        return;
-    }
-    
-    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    cartTotal.textContent = total.toFixed(3);
-    
-    cartItems.innerHTML = cart.map(item => `
-        <div class="cart-item">
-            <img src="${item.imageUrl}" alt="${item.title}" class="cart-item-image">
-            <div class="cart-item-info">
-                <h4 class="cart-item-title">${item.title}</h4>
-                <p class="cart-item-artist">by ${item.artist}</p>
-                <p class="cart-item-price">${item.price} ETH</p>
-                <span class="nft-badge">Unique Artwork</span>
-            </div>
-            <div class="cart-item-actions">
-                <button class="remove-btn enhanced-remove-btn" onclick="removeFromCart('${item.id}')">
-                    <i class="fas fa-times"></i> Remove
-                </button>
-            </div>
-        </div>
-    `).join('');
-}
-
-// Close modals when clicking outside - Enhanced
-window.addEventListener('click', function(event) {
-    const modals = ['cartModal', 'artworkModal', 'blockchainModal', 'artistModal'];
-    
-    modals.forEach(modalId => {
-        const modal = document.getElementById(modalId);
-        if (event.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
-});
-
-
 
 
 
@@ -1866,112 +1874,6 @@ async function loadUserProfileFromDB(walletAddr) {
     });
 }
 
-
-
-/*function enableUsernameEdit() {
-  const now = Date.now();
-  const lastEdit = currentUser?.lastUsernameUpdate || 0;
-  const sixtyDays = 60 * 24 * 60 * 60 * 1000;
-
-  if (now - lastEdit < sixtyDays) {
-    const remaining = Math.ceil((sixtyDays - (now - lastEdit)) / (24 * 60 * 60 * 1000));
-    showToast(`⏳ You can edit your username again in ${remaining} day(s).`, "warning");
-    return;
-  }
-
-  // Cooldown expired → show input
-  document.getElementById("usernameEdit").style.display = "block";
-}*/
-
-
-// function renderUserProfile() {
-//     if (!currentUser) return;
-//     document.getElementById("profileName").textContent = currentUser.username;
-//     document.getElementById("profileWallet").textContent = `Wallet: ${walletAddress}`;
-
-//     const artistInput = document.getElementById("artistName");
-//     if (artistInput) {
-//         artistInput.value = currentUser.username || "Unnamed Artist";
-//     }
-
-//     checkUsernameCooldown();
-
-//     loadUserArtworks(walletAddress);
-//     loadUserPurchases(walletAddress);
-// }
-
-
-function renderUserProfile() {
-  if (!currentUser) return;
-
-  // Display username and wallet
-  document.getElementById("profileName").textContent =
-    currentUser.username || "New User";
-  document.getElementById("profileWallet").textContent =
-    `Wallet: ${walletAddress || "Not Connected"}`;
-
-  // Display bio (if element exists)
-  const bioEl = document.getElementById("profileBio");
-  if (bioEl) {
-    bioEl.textContent = currentUser.bio || "No bio yet.";
-  }
-
-  // Pre-fill artist name on upload form
-  const artistInput = document.getElementById("artistName");
-  if (artistInput) {
-    artistInput.value = currentUser.username || "Unnamed Artist";
-  }
-
-  // Optional cooldown check for username edits
-  if (typeof checkUsernameCooldown === "function") {
-    checkUsernameCooldown();
-  }
-
-  // Load user's artworks & purchases
-  if (walletAddress) {
-loadUserArtworksLive(walletAddress);
-loadUserPurchasesLive(walletAddress);
-
-  }
-
-  // ✅ NEW: ensure wallet data is properly recognized after refresh
-  onWalletReady((address) => {
-    console.log("Wallet ready inside renderUserProfile:", address);
-    document.getElementById("profileWallet").textContent = `Wallet: ${address}`;
-
-    // Reload wallet-dependent data once the wallet reconnects
-loadUserArtworksLive(walletAddress);
-loadUserPurchasesLive(walletAddress);
-
-  });
-}
-
-
-
-
-
-// function enableUsernameEdit() {
-//     if (!walletConnected) {
-//         showToast("Please connect your wallet first", "error");
-//         return;
-//     }
-
-//     const canEdit = checkUsernameCooldown();
-//     if (!canEdit) {
-//         // Extra toast when user tries before cooldown expires
-//         const lastUpdate = currentUser.lastUsernameUpdate || 0;
-//         const elapsed = Date.now() - lastUpdate;
-//         const remaining = USERNAME_COOLDOWN - elapsed;
-//         const daysLeft = Math.ceil(remaining / (1000 * 60 * 60 * 24));
-
-//         showToast(`⏳ You can't change your username yet. Please wait ${daysLeft} day(s).`, "warning");
-//         return;
-//     }
-
-//     document.getElementById("usernameEdit").style.display = "flex";
-//     document.getElementById("editNameBtn").style.display = "none";
-//     document.getElementById("usernameInput").value = currentUser.username;
-// }
 
 
 function enableUsernameEdit() {
@@ -2050,6 +1952,78 @@ function enableUsernameEdit() {
 //     }
 // }
 
+function renderUserProfile() {
+  if (!currentUser) return;
+
+  // Display username and wallet
+  document.getElementById("profileName").textContent =
+    currentUser.username || "New User";
+  document.getElementById("profileWallet").textContent =
+    `Wallet: ${walletAddress || "Not Connected"}`;
+
+  // Display bio (if element exists)
+  const bioEl = document.getElementById("profileBio");
+  if (bioEl) {
+    bioEl.textContent = currentUser.bio || "No bio yet.";
+  }
+
+  // Pre-fill artist name on upload form
+  const artistInput = document.getElementById("artistName");
+  if (artistInput) {
+    artistInput.value = currentUser.username || "Unnamed Artist";
+  }
+
+  // Optional cooldown check for username edits
+  if (typeof checkUsernameCooldown === "function") {
+    checkUsernameCooldown();
+  }
+
+  // Load user's artworks & purchases
+  if (walletAddress) {
+    loadUserArtworksLive(walletAddress);
+    loadUserPurchasesLive(walletAddress);
+  }
+
+  // ✅ NEW: ensure wallet data is properly recognized after refresh
+  onWalletReady((address) => {
+    console.log("Wallet ready inside renderUserProfile:", address);
+    document.getElementById("profileWallet").textContent = `Wallet: ${address}`;
+
+    // Reload wallet-dependent data once the wallet reconnects
+    loadUserArtworksLive(address);
+    loadUserPurchasesLive(address);
+  });
+}
+
+
+
+
+
+// function enableUsernameEdit() {
+//     if (!walletConnected) {
+//         showToast("Please connect your wallet first", "error");
+//         return;
+//     }
+
+//     const canEdit = checkUsernameCooldown();
+//     if (!canEdit) {
+//         // Extra toast when user tries before cooldown expires
+//         const lastUpdate = currentUser.lastUsernameUpdate || 0;
+//         const elapsed = Date.now() - lastUpdate;
+//         const remaining = USERNAME_COOLDOWN - elapsed;
+//         const daysLeft = Math.ceil(remaining / (1000 * 60 * 60 * 24));
+
+//         showToast(`⏳ You can't change your username yet. Please wait ${daysLeft} day(s).`, "warning");
+//         return;
+//     }
+
+//     document.getElementById("usernameEdit").style.display = "flex";
+//     document.getElementById("editNameBtn").style.display = "none";
+//     document.getElementById("usernameInput").value = currentUser.username;
+// }
+
+
+
 async function saveUsername() {
     if (!walletConnected || !currentUser) {
         showToast("Wallet not connected", "error");
@@ -2115,6 +2089,7 @@ async function saveUsername() {
         }
 
         showToast("Username and linked artworks updated successfully!", "success");
+        loadArtworksLive();
     } catch (error) {
         console.error("Failed to update username:", error);
         showToast("Error updating username", "error");
@@ -2124,6 +2099,11 @@ async function saveUsername() {
 
 
 function enableBioEdit() {
+  if (!walletConnected || !currentUser) {
+        showToast("Wallet not connected", "error");
+        return;
+    }
+  
   const now = Date.now();
   const lastEdit = currentUser?.lastBioEdit || 0;
   const sixtyDays = 60 * 24 * 60 * 60 * 1000;
@@ -2181,6 +2161,7 @@ async function saveBio() {
         if (typeof loadFeaturedArtists === "function") {
             loadFeaturedArtists();
         }
+        loadArtworksLive();
 
     } catch (err) {
         console.error("Error updating bio:", err);
@@ -2471,6 +2452,12 @@ async function resellArtwork(artId, newPrice) {
         const today = new Date().toISOString().split("T")[0];
         const parsedPrice = parseFloat(newPrice);
 
+        if (isNaN(parsedPrice) || parsedPrice <= 0) {
+            hideLoading();
+            showToast("Please enter a valid resale price.", "error");
+            return;
+        }
+
         const newPriceEvent = {
             price: parsedPrice,
             date: today,
@@ -2478,9 +2465,12 @@ async function resellArtwork(artId, newPrice) {
         };
 
         const updatedPriceHistory = Array.isArray(artData.price_history)
-        ? [...artData.price_history, newPriceEvent]
-        : [newPriceEvent];
+            ? [...artData.price_history, newPriceEvent]
+            : [newPriceEvent];
 
+        const ownerHistory = Array.isArray(artData.owner_history)
+            ? [...artData.owner_history]
+            : [];
 
         // Build new resale record
         const relistedArt = {
@@ -2493,12 +2483,17 @@ async function resellArtwork(artId, newPrice) {
             imageUrl: artData.artwork.imageUrl,
             year: artData.artwork.year || "",
             price: parsedPrice,
+            resale: true,
+            inStock: true,
             sellerId: walletAddress.toLowerCase(),
             original_owner: artData.original_owner || walletAddress.toLowerCase(),
             current_owner: walletAddress.toLowerCase(),
-            owner_history: artData.owner_history || [],
+            owner_history: ownerHistory,
             price_history: updatedPriceHistory,
             timestamp: new Date().toISOString(),
+
+            // ✅ ADD THIS LINE
+            status: "resold"
         };
 
         // Save to user's sellingArts
@@ -2512,9 +2507,9 @@ async function resellArtwork(artId, newPrice) {
 
         showToast("Artwork listed for resale!", "success");
 
-        // Update UI instantly
-        loadUserPurchases(); // refresh purchased list
-        loadUserArtworks();   // refresh selling list
+        // Refresh UI
+        loadUserPurchasesLive();
+        loadUserArtworksLive();
         loadArtworksLive();
         hideLoading();
 
@@ -2523,6 +2518,7 @@ async function resellArtwork(artId, newPrice) {
         showToast("Resell failed: " + error.message, "error");
     }
 }
+
 
 async function viewArtworkDetails(artId, source) {
     try {
@@ -2557,7 +2553,7 @@ async function viewArtworkDetails(artId, source) {
         document.getElementById("detailsDescription").textContent = art.description || "No description available";
         document.getElementById("detailsCategory").textContent = art.category || "Uncategorized";
         document.getElementById("detailsYear").textContent = art.year || "—";
-        document.getElementById("detailsDimensions").textContent = art.dimensions || "—";
+        document.getElementById("detailsDimensions").textContent = art.dimension || "—";
         document.getElementById("detailsPrice").textContent = `${art.price || "0.000"} tETH`;
 
         // Show modal
@@ -2589,45 +2585,6 @@ window.addEventListener("click", (event) => {
 });
 
 
-
-// function disconnectWallet() {
-//   try {
-//     // Mark that user intentionally disconnected (prevents auto-reconnect)
-//     localStorage.setItem('walletDisconnectedByUser', 'true');
-
-//     // Remove saved wallet
-//     localStorage.removeItem('walletAddress');
-
-//     // Remove listeners (if you added them earlier)
-//     if (window.ethereum && window.ethereum.removeListener) {
-//       try {
-//         window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
-//       } catch (e) { console.warn('accountsChanged removeListener failed', e); }
-//       try {
-//         window.ethereum.removeListener('chainChanged', handleChainChanged);
-//       } catch (e) { console.warn('chainChanged removeListener failed', e); }
-//     }
-
-//     // Reset app state
-//     walletAddress = null;
-//     walletConnected = false;
-
-//     // Update UI (use your existing function — ensure it handles null/false)
-//     updateWalletUI();
-
-//     // Clear profile areas (optional)
-//     const ua = document.getElementById('userArtworks');
-//     const up = document.getElementById('userPurchases');
-//     if (ua) ua.innerHTML = '';
-//     if (up) up.innerHTML = '';
-
-//     showToast('Wallet disconnected locally. To fully revoke access remove this site in MetaMask (instructions below).', 'success');
-//     setTimeout(() => location.reload(), 1000);
-//   } catch (err) {
-//     console.error('disconnectWallet error:', err);
-//     showToast('Failed to disconnect wallet', 'error');
-//   }
-// }
 function showLoading() {
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) overlay.style.display = 'flex';
@@ -2652,8 +2609,6 @@ function onWalletReady(callback) {
         });
     }
 }
-
-
 function waitForFirebase() {
   return new Promise(resolve => {
     const check = () => {
@@ -2678,6 +2633,76 @@ function renderUserPurchases(purchases) {
         </div>
     `).join('');
 }
+
+
+function showBlockchainDetails(artworkId) {
+  const artwork = [...submittedArtworks].find(item => String(item.id) === String(artworkId));
+  if (!artwork) {
+    showToast("Artwork not found", "error");
+    return;
+  }
+
+  const modal = document.getElementById("blockchainModal");
+  const container = document.getElementById("blockchainDetail");
+
+  let ownerHistoryHTML = "";
+  if (artwork.owner_history && artwork.owner_history.length > 0) {
+    ownerHistoryHTML = artwork.owner_history.map(
+      h => `
+        <div class="history-row">
+          <span class="history-date">${h.date}</span>
+          <span class="history-event">${h.event}</span>
+          <span class="history-owner">${h.owner}</span>
+        </div>
+      `
+    ).join("");
+  } else {
+    ownerHistoryHTML = `<p>No ownership history available.</p>`;
+  }
+
+  let priceHistoryHTML = "";
+  if (artwork.price_history && artwork.price_history.length > 0) {
+    priceHistoryHTML = artwork.price_history.map(
+      p => `
+        <div class="history-row">
+          <span class="history-date">${p.date}</span>
+          <span class="history-event">${p.event}</span>
+          <span class="history-price">${p.price} tETH</span>
+        </div>
+      `
+    ).join("");
+  } else {
+    priceHistoryHTML = `<p>No price history available.</p>`;
+  }
+
+  container.innerHTML = `
+    <img src="${artwork.imageUrl}" alt="${artwork.title}" class="blockchain-img">
+    <div class="blockchain-info">
+      <h2>${artwork.title}</h2>
+      <p><strong>Artist:</strong> ${artwork.artist}</p>
+      <p><strong>Category:</strong> ${artwork.category}</p>
+      <p><strong>Year:</strong> ${artwork.year}</p>
+      <p><strong>Dimension:</strong> ${artwork.dimension}</p>
+      <p><strong>Description:</strong> ${artwork.description}</p>
+      <hr>
+      <h3>Owner History</h3>
+      <div class="history-table">${ownerHistoryHTML}</div>
+      <hr>
+      <h3>Price History</h3>
+      <div class="history-table">${priceHistoryHTML}</div>
+    </div>
+  `;
+
+  modal.style.display = "block";
+}
+
+function closeBlockchainModal() {
+  document.getElementById("blockchainModal").style.display = "none";
+}
+
+
+
+
 
 
 // script.js
@@ -2716,6 +2741,8 @@ window.loadUserPurchasesLive = loadUserPurchasesLive;
 window.loadUserArtworksLive = loadUserArtworksLive;
 window.hideLoading = hideLoading;
 window.buyArtworkFromModal = buyArtworkFromModal;
+window.showBlockchainDetails = showBlockchainDetails;
+window.closeBlockchainModal = closeBlockchainModal
 
 // Make sure all functions are defined above this line
 document.addEventListener("DOMContentLoaded", () => {
@@ -2754,45 +2781,11 @@ document.addEventListener("DOMContentLoaded", () => {
     loadUserPurchasesLive,
     loadUserArtworksLive,
     hideLoading,
+    buyArtworkFromModal,
+    showBlockchainDetails,
+    closeBlockchainModal,
   });
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
