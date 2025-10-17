@@ -2456,94 +2456,83 @@ async function confirmResell() {
 
 
 async function resellArtwork(artId, newPrice) {
-    if (!walletConnected || !walletAddress) {
-        showToast("Please connect your wallet first.", "error");
-        return;
+  if (!walletConnected || !walletAddress) {
+    showToast("Please connect your wallet first.", "error");
+    return;
+  }
+
+  try {
+    showLoading();
+    showLoadingText("Preparing your artwork for resale...");
+
+    const artRef = doc(db, "users", walletAddress.toLowerCase(), "artBought", String(artId));
+    const snapshot = await getDoc(artRef);
+
+    if (!snapshot.exists()) {
+      hideLoading();
+      showToast("Artwork not found in your purchases", "error");
+      return;
     }
-    
-    try {
-        showLoading();
-        showLoadingText("Preparing your artwork for resale...");
 
-        const artRef = doc(db, "users", walletAddress.toLowerCase(), "artBought", String(artId));
-        const snapshot = await getDoc(artRef);
+    const artData = snapshot.data();
+    const today = new Date().toISOString().split("T")[0];
+    const parsedPrice = parseFloat(newPrice);
 
-        if (!snapshot.exists()) {
-            hideLoading();
-            showToast("Artwork not found in your purchases", "error");
-            return;
-        }
-
-        const artData = snapshot.data();
-        const today = new Date().toISOString().split("T")[0];
-        const parsedPrice = parseFloat(newPrice);
-
-        if (isNaN(parsedPrice) || parsedPrice <= 0) {
-            hideLoading();
-            showToast("Please enter a valid resale price.", "error");
-            return;
-        }
-
-        const newPriceEvent = {
-            price: parsedPrice,
-            date: today,
-            event: "Relisted",
-        };
-
-        const updatedPriceHistory = Array.isArray(artData.price_history)
-            ? [...artData.price_history, newPriceEvent]
-            : [newPriceEvent];
-
-        const ownerHistory = Array.isArray(artData.owner_history)
-            ? [...artData.owner_history]
-            : [];
-
-        // Build new resale record
-        const relistedArt = {
-            id: artData.artwork.id,
-            title: artData.artwork.title,
-            artist: artData.artwork.artist,
-            description: artData.artwork.description,
-            category: artData.artwork.category,
-            dimension: artData.artwork.dimension || "N/A",
-            imageUrl: artData.artwork.imageUrl,
-            year: artData.artwork.year || "",
-            price: parsedPrice,
-            resale: true,
-            inStock: true,
-            sellerId: walletAddress.toLowerCase(),
-            original_owner: artData.original_owner || walletAddress.toLowerCase(),
-            current_owner: walletAddress.toLowerCase(),
-            owner_history: ownerHistory,
-            price_history: updatedPriceHistory,
-            timestamp: new Date().toISOString(),
-
-            // ✅ ADD THIS LINE
-            status: "resold"
-        };
-
-        // Save to user's sellingArts
-        await setDoc(doc(db, "users", walletAddress.toLowerCase(), "sellingArts", String(artId)), relistedArt);
-
-        // Save to global artworks
-        await setDoc(doc(db, "artworks", String(artId)), relistedArt);
-
-        // Remove from user's artBought
-        await deleteDoc(artRef);
-
-        showToast("Artwork listed for resale!", "success");
-
-        // Refresh UI
-        loadUserPurchasesLive();
-        loadUserArtworksLive();
-        loadArtworksLive();
-        hideLoading();
-
-    } catch (error) {
-        console.error("Resell failed:", error);
-        showToast("Resell failed: " + error.message, "error");
+    if (isNaN(parsedPrice) || parsedPrice <= 0) {
+      hideLoading();
+      showToast("Please enter a valid resale price.", "error");
+      return;
     }
+
+    const newPriceEvent = { price: parsedPrice, date: today, event: "Relisted" };
+
+    const updatedPriceHistory = Array.isArray(artData.price_history)
+      ? [...artData.price_history, newPriceEvent]
+      : [newPriceEvent];
+
+    const ownerHistory = Array.isArray(artData.owner_history)
+      ? [...artData.owner_history]
+      : [];
+
+    // ✅ Updated resale record
+    const relistedArt = {
+      id: artData.artwork.id,
+      title: artData.artwork.title,
+      artist: artData.artwork.artist,
+      description: artData.artwork.description,
+      category: artData.artwork.category,
+      dimension: artData.artwork.dimension || "N/A",
+      imageUrl: artData.artwork.imageUrl,
+      year: artData.artwork.year || "",
+      price: parsedPrice,
+      resold: true, // ✅ consistent with your upload logic
+      inStock: true,
+      sellerId: walletAddress.toLowerCase(),
+      original_owner: artData.original_owner || walletAddress.toLowerCase(),
+      current_owner: walletAddress.toLowerCase(),
+      owner_history: ownerHistory,
+      price_history: updatedPriceHistory,
+      timestamp: new Date().toISOString(),
+      status: "resold"
+    };
+
+    await setDoc(doc(db, "users", walletAddress.toLowerCase(), "sellingArts", String(artId)), relistedArt);
+    await setDoc(doc(db, "artworks", String(artId)), relistedArt);
+    await deleteDoc(artRef);
+
+    showToast("Artwork listed for resale!", "success");
+
+    loadUserPurchasesLive();
+    loadUserArtworksLive();
+    loadArtworksLive();
+    hideLoading();
+
+  } catch (error) {
+    console.error("Resell failed:", error);
+    showToast("Resell failed: " + error.message, "error");
+  }
 }
+
 
 
 async function viewArtworkDetails(artId, source) {
@@ -2820,6 +2809,7 @@ document.addEventListener("DOMContentLoaded", () => {
     closeBlockchainModal,
   });
 });
+
 
 
 
