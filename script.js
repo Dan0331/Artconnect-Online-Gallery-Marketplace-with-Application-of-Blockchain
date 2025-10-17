@@ -1028,6 +1028,30 @@ const yearInput = document.getElementById("artworkYear");
 const currentYear = new Date().getFullYear();
 yearInput.max = currentYear;
 
+function validateSubmissionForm(data) {
+  if (!data.title || !data.artist || !data.description || !data.imageUrl) {
+    showToast("Please fill in all required fields and upload an image.", "error");
+    return false;
+  }
+
+  if (isNaN(data.price) || data.price <= 0) {
+    showToast("Please enter a valid price greater than 0.", "error");
+    return false;
+  }
+
+  if (!data.category || data.category === "Select category") {
+    showToast("Please select a valid category.", "error");
+    return false;
+  }
+
+  if (!data.dimension || data.dimension === "-- Select Resolution --") {
+    showToast("Please select a resolution or dimension.", "error");
+    return false;
+  }
+
+  return true; // ✅ Passed validation
+}
+
 
 // Submit artwork functionality
 async function submitArtwork(event) {
@@ -2796,6 +2820,7 @@ document.addEventListener("DOMContentLoaded", () => {
     closeBlockchainModal,
   });
 });
+
 
 
 
