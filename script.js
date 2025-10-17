@@ -1076,38 +1076,40 @@ async function submitArtwork(event) {
         const today = new Date().toISOString().split('T')[0];
         
         const newArtwork = {
-            id: artDocId,
-            title: formData.title,
-            artist: formData.artist,
-            category: formData.category,
-            dimension: formData.dimension,
-            description: formData.description,
-            imageUrl: formData.imageUrl,
-            sellerId: walletAddress.toLowerCase(),
-            original_owner: walletAddress.toLowerCase(),
-            price: formData.price,
-            year: formData.year,
-            inStock: true,
-            submittedAt: new Date().toISOString(),
+  id: artDocId,
+  title: formData.title,
+  artist: formData.artist,
+  category: formData.category,
+  dimension: formData.dimension,
+  description: formData.description,
+  imageUrl: formData.imageUrl,
+  sellerId: walletAddress.toLowerCase(),
+  original_owner: walletAddress.toLowerCase(),
+  price: formData.price,
+  year: formData.year,
+  inStock: true,
+  submittedAt: new Date().toISOString(),
 
-            // ✅ ADD THIS FIELD:
-            status: "new",
+  // 🔹 Add this to match your Firestore
+  resold: false,       // or "no" if you used string in Firestore
+  status: "new",
 
-            owner_history: [
-                {
-                    owner: walletAddress.toLowerCase(),
-                    date: today,
-                    event: "Submitted"
-                }
-            ],
-            price_history: [
-                {
-                    price: parseFloat(formData.price) || 0,
-                    date: today,
-                    event: "Listed"
-                }
-            ]
-        };
+  owner_history: [
+    {
+      owner: walletAddress.toLowerCase(),
+      date: today,
+      event: "Submitted"
+    }
+  ],
+  price_history: [
+    {
+      price: parseFloat(formData.price) || 0,
+      date: today,
+      event: "Listed"
+    }
+  ]
+};
+
 
         // save to user's sellingArts with that id
         await setDoc(doc(db, "users", walletAddress.toLowerCase(), "sellingArts", artDocId), newArtwork);
@@ -2645,36 +2647,43 @@ function showBlockchainDetails(artworkId) {
   const modal = document.getElementById("blockchainModal");
   const container = document.getElementById("blockchainDetail");
 
+  // 🔹 Handle Owner History
   let ownerHistoryHTML = "";
   if (artwork.owner_history && artwork.owner_history.length > 0) {
-    ownerHistoryHTML = artwork.owner_history.map(
-      h => `
-        <div class="history-row">
-          <span class="history-date">${h.date}</span>
-          <span class="history-event">${h.event}</span>
-          <span class="history-owner">${h.owner}</span>
-        </div>
-      `
-    ).join("");
+    ownerHistoryHTML = artwork.owner_history.map(h => `
+      <div class="history-row">
+        <span class="history-date">${h.date}</span>
+        <span class="history-event">${h.event}</span>
+        <span class="history-owner">${h.owner}</span>
+      </div>
+    `).join("");
   } else {
     ownerHistoryHTML = `<p>No ownership history available.</p>`;
   }
 
+  // 🔹 Handle Price History
   let priceHistoryHTML = "";
   if (artwork.price_history && artwork.price_history.length > 0) {
-    priceHistoryHTML = artwork.price_history.map(
-      p => `
-        <div class="history-row">
-          <span class="history-date">${p.date}</span>
-          <span class="history-event">${p.event}</span>
-          <span class="history-price">${p.price} tETH</span>
-        </div>
-      `
-    ).join("");
+    priceHistoryHTML = artwork.price_history.map(p => `
+      <div class="history-row">
+        <span class="history-date">${p.date}</span>
+        <span class="history-event">${p.event}</span>
+        <span class="history-price">${p.price} tETH</span>
+      </div>
+    `).join("");
   } else {
     priceHistoryHTML = `<p>No price history available.</p>`;
   }
 
+  // 🔹 Handle Resold field (new)
+  let resoldStatus = "";
+  if (typeof artwork.resold !== "undefined") {
+    resoldStatus = `
+      <p><strong>Resold:</strong> ${artwork.resold === true || artwork.resold === "yes" ? "Yes" : "No"}</p>
+    `;
+  }
+
+  // 🔹 Render full details
   container.innerHTML = `
     <img src="${artwork.imageUrl}" alt="${artwork.title}" class="blockchain-img">
     <div class="blockchain-info">
@@ -2684,6 +2693,7 @@ function showBlockchainDetails(artworkId) {
       <p><strong>Year:</strong> ${artwork.year}</p>
       <p><strong>Dimension:</strong> ${artwork.dimension}</p>
       <p><strong>Description:</strong> ${artwork.description}</p>
+      ${resoldStatus}
       <hr>
       <h3>Owner History</h3>
       <div class="history-table">${ownerHistoryHTML}</div>
@@ -2786,6 +2796,7 @@ document.addEventListener("DOMContentLoaded", () => {
     closeBlockchainModal,
   });
 });
+
 
 
 
