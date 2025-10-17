@@ -2484,17 +2484,29 @@ async function resellArtwork(artId, newPrice) {
       return;
     }
 
-    const newPriceEvent = { price: parsedPrice, date: today, event: "Relisted" };
+    // 🔹 Create new history entries
+    const newPriceEvent = {
+      price: parsedPrice,
+      date: today,
+      event: "Resold",
+    };
 
+    const newOwnerEvent = {
+      owner: walletAddress.toLowerCase(),
+      date: today,
+      event: "Resold",
+    };
+
+    // 🔹 Append new entries to existing history arrays
     const updatedPriceHistory = Array.isArray(artData.price_history)
       ? [...artData.price_history, newPriceEvent]
       : [newPriceEvent];
 
-    const ownerHistory = Array.isArray(artData.owner_history)
-      ? [...artData.owner_history]
-      : [];
+    const updatedOwnerHistory = Array.isArray(artData.owner_history)
+      ? [...artData.owner_history, newOwnerEvent]
+      : [newOwnerEvent];
 
-    // ✅ Updated resale record
+    // 🔹 Build new resale record
     const relistedArt = {
       id: artData.artwork.id,
       title: artData.artwork.title,
@@ -2505,23 +2517,29 @@ async function resellArtwork(artId, newPrice) {
       imageUrl: artData.artwork.imageUrl,
       year: artData.artwork.year || "",
       price: parsedPrice,
-      resold: true, // ✅ consistent with your upload logic
+      resold: true, // ✅ consistent field name
       inStock: true,
       sellerId: walletAddress.toLowerCase(),
       original_owner: artData.original_owner || walletAddress.toLowerCase(),
       current_owner: walletAddress.toLowerCase(),
-      owner_history: ownerHistory,
+      owner_history: updatedOwnerHistory,  // ✅ now includes the new event
       price_history: updatedPriceHistory,
       timestamp: new Date().toISOString(),
-      status: "resold"
+      status: "resold",
     };
 
+    // 🔹 Save to user's sellingArts
     await setDoc(doc(db, "users", walletAddress.toLowerCase(), "sellingArts", String(artId)), relistedArt);
+
+    // 🔹 Save to global artworks collection
     await setDoc(doc(db, "artworks", String(artId)), relistedArt);
+
+    // 🔹 Remove from user's artBought
     await deleteDoc(artRef);
 
     showToast("Artwork listed for resale!", "success");
 
+    // 🔹 Refresh UI
     loadUserPurchasesLive();
     loadUserArtworksLive();
     loadArtworksLive();
@@ -2809,6 +2827,7 @@ document.addEventListener("DOMContentLoaded", () => {
     closeBlockchainModal,
   });
 });
+
 
 
 
