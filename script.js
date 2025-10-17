@@ -891,7 +891,7 @@ async function securePurchase(item) {
       return;
     }
 
-    // Step 1: Transaction to atomically mark as sold
+    // Step 1: Firestore transaction
     await runTransaction(db, async (transaction) => {
       const artSnap = await transaction.get(artRef);
 
@@ -904,17 +904,33 @@ async function securePurchase(item) {
         throw new Error(`"${item.title}" was just purchased by another user.`);
       }
 
-      // Mark as sold (prevents double-buy)
-      transaction.update(artRef, { inStock: false, status: "sold" });
-
-      // 💰 Payment process
+      // 💰 Payment
       showLoadingText(`Waiting for MetaMask confirmation to pay seller for "${item.title}"...`);
       const txSeller = await sendPayment(item.sellerId, item.price);
 
       const today = new Date().toISOString().split("T")[0];
+      const buyerAddress = walletAddress.toLowerCase();
 
-      // Record buyer’s purchase
-      const buyerRef = doc(db, "users", walletAddress.toLowerCase(), "artBought", String(item.id));
+      // 🔹 Update artwork ownership in global collection
+      const updatedOwnerHistory = Array.isArray(artData.owner_history)
+        ? [...artData.owner_history, { owner: buyerAddress, date: today, event: "Purchased" }]
+        : [{ owner: buyerAddress, date: today, event: "Purchased" }];
+
+      const updatedPriceHistory = Array.isArray(artData.price_history)
+        ? [...artData.price_history, { price: parseFloat(item.price), date: today, event: "Purchased" }]
+        : [{ price: parseFloat(item.price), date: today, event: "Purchased" }];
+
+      transaction.update(artRef, {
+        current_owner: buyerAddress,
+        inStock: false,
+        status: "sold",
+        resold: true, // ✅ maintain resale status
+        owner_history: updatedOwnerHistory,
+        price_history: updatedPriceHistory,
+      });
+
+      // 🔹 Add to buyer’s artBought
+      const buyerRef = doc(db, "users", buyerAddress, "artBought", String(item.id));
       transaction.set(buyerRef, {
         artwork: {
           id: item.id,
@@ -927,20 +943,18 @@ async function securePurchase(item) {
           imageUrl: item.imageUrl,
           year: item.year || "",
         },
-        buyerId: walletAddress.toLowerCase(),
+        buyerId: buyerAddress,
         sellerId: item.sellerId.toLowerCase(),
         timestamp: new Date().toISOString(),
         transaction_hash: txSeller,
       });
 
-      // Remove from seller’s selling list
+      // 🔹 Remove from seller’s selling list
       const sellerRef = doc(db, "users", item.sellerId.toLowerCase(), "sellingArts", String(item.id));
       transaction.delete(sellerRef);
     });
 
-    // Step 2: Delete from artworks collection
-    await deleteDoc(artRef);
-
+    // ✅ No deletion of artRef — we now keep the record with updated ownership
     showToast(`✅ Successfully purchased "${item.title}"!`, "success");
   } catch (e) {
     console.error("❌ Secure purchase failed:", e);
@@ -948,6 +962,7 @@ async function securePurchase(item) {
     throw e;
   }
 }
+
 
 async function checkout() {
   if (!walletConnected || !walletAddress) {
@@ -2827,6 +2842,7 @@ document.addEventListener("DOMContentLoaded", () => {
     closeBlockchainModal,
   });
 });
+
 
 
 
