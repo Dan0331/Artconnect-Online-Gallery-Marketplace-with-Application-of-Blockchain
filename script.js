@@ -2909,6 +2909,8 @@ window.buyArtworkFromModal = buyArtworkFromModal;
 window.showBlockchainDetails = showBlockchainDetails;
 window.closeBlockchainModal = closeBlockchainModal;
 window.submitArtworkReview = submitArtworkReview;
+window.loadArtworkReviews = loadArtworkReviews;
+
 
 // Make sure all functions are defined above this line
 document.addEventListener("DOMContentLoaded", () => {
@@ -2951,8 +2953,10 @@ document.addEventListener("DOMContentLoaded", () => {
     showBlockchainDetails,
     closeBlockchainModal,
     submitArtworkReview,
+    loadArtworkReviews,
   });
 });
+
 
 
 
