@@ -1877,9 +1877,6 @@ function viewTransactions() {
 
 
 
-
-const USERNAME_COOLDOWN = 0; //60 * 24 * 60 * 60 * 1000; // 60 days
-
 async function loadUserProfileFromDB(walletAddr) {
     if (!walletAddr) {
         console.warn("No wallet connected yet.");
@@ -3030,5 +3027,6 @@ window.openResellModal = openResellModal;
 console.log("✅ Modal handlers initialized");
 
 console.log("✅ Core functions loaded and exposed globally");
+
 
 
