@@ -21,7 +21,92 @@ import {
   where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// script.js
+window.connectWallet = connectWallet;
+window.disconnectWallet = disconnectWallet;
+window.toggleCart = toggleCart;
+window.addToCart = addToCart;
+window.removeFromCart = removeFromCart;
+window.clearCart = clearCart;
+window.checkout = checkout;
+window.showSection = showSection;
+window.loadArtworksLive = loadArtworksLive;
+window.filterArtworks = filterArtworks;
+window.submitArtwork = submitArtwork;
+window.approveAllArtworks = approveAllArtworks;
+window.viewReports = viewReports;
+window.exportData = exportData;
+window.viewAllUsers = viewAllUsers;
+window.viewTransactions = viewTransactions;
+window.enableUsernameEdit = enableUsernameEdit;
+window.saveUsername = saveUsername;
+window.enableBioEdit = enableBioEdit;
+window.saveBio = saveBio;
+window.showArtworkDetail = showArtworkDetail;
+window.closeArtworkModal = closeArtworkModal;
+window.showArtistProfile = showArtistProfile;
+window.closeResellModal = closeResellModal;
+window.confirmResell = confirmResell;
+window.closeBlockchainModal = closeBlockchainModal;
+window.closeDetailsModal = closeDetailsModal;
+window.closeArtistModal = closeArtistModal;
+window.viewArtworkDetails = viewArtworkDetails;
+window.openResellModal = openResellModal;
+window.resellArtwork = resellArtwork;
+window.loadUserPurchasesLive = loadUserPurchasesLive;
+window.loadUserArtworksLive = loadUserArtworksLive;
+window.hideLoading = hideLoading;
+window.buyArtworkFromModal = buyArtworkFromModal;
+window.showBlockchainDetails = showBlockchainDetails;
+window.closeBlockchainModal = closeBlockchainModal;
+window.submitArtworkReview = submitArtworkReview;
+window.loadArtworkReviews = loadArtworkReviews;
 
+
+// Make sure all functions are defined above this line
+document.addEventListener("DOMContentLoaded", () => {
+  Object.assign(window, {
+    connectWallet,
+    disconnectWallet,
+    toggleCart,
+    addToCart,
+    removeFromCart,
+    clearCart,
+    checkout,
+    showSection,
+    loadArtworksLive,
+    filterArtworks,
+    submitArtwork,
+    approveAllArtworks,
+    viewReports,
+    exportData,
+    viewAllUsers,
+    viewTransactions,
+    enableUsernameEdit,
+    saveUsername,
+    enableBioEdit,
+    saveBio,
+    showArtworkDetail,
+    closeArtworkModal,
+    showArtistProfile,
+    closeResellModal,
+    confirmResell,
+    closeBlockchainModal,
+    closeDetailsModal,
+    closeArtistModal,
+    viewArtworkDetails,
+    openResellModal,
+    resellArtwork,
+    loadUserPurchasesLive,
+    loadUserArtworksLive,
+    hideLoading,
+    buyArtworkFromModal,
+    showBlockchainDetails,
+    closeBlockchainModal,
+    submitArtworkReview,
+    loadArtworkReviews,
+  });
+});
 
 // 🔹 Global wallet recovery after refresh (respects manual logout)
 window.addEventListener("DOMContentLoaded", async () => {
@@ -2870,92 +2955,8 @@ function updateStarDisplay(value) {
 
 
 
-// script.js
-window.connectWallet = connectWallet;
-window.disconnectWallet = disconnectWallet;
-window.toggleCart = toggleCart;
-window.addToCart = addToCart;
-window.removeFromCart = removeFromCart;
-window.clearCart = clearCart;
-window.checkout = checkout;
-window.showSection = showSection;
-window.loadArtworksLive = loadArtworksLive;
-window.filterArtworks = filterArtworks;
-window.submitArtwork = submitArtwork;
-window.approveAllArtworks = approveAllArtworks;
-window.viewReports = viewReports;
-window.exportData = exportData;
-window.viewAllUsers = viewAllUsers;
-window.viewTransactions = viewTransactions;
-window.enableUsernameEdit = enableUsernameEdit;
-window.saveUsername = saveUsername;
-window.enableBioEdit = enableBioEdit;
-window.saveBio = saveBio;
-window.showArtworkDetail = showArtworkDetail;
-window.closeArtworkModal = closeArtworkModal;
-window.showArtistProfile = showArtistProfile;
-window.closeResellModal = closeResellModal;
-window.confirmResell = confirmResell;
-window.closeBlockchainModal = closeBlockchainModal;
-window.closeDetailsModal = closeDetailsModal;
-window.closeArtistModal = closeArtistModal;
-window.viewArtworkDetails = viewArtworkDetails;
-window.openResellModal = openResellModal;
-window.resellArtwork = resellArtwork;
-window.loadUserPurchasesLive = loadUserPurchasesLive;
-window.loadUserArtworksLive = loadUserArtworksLive;
-window.hideLoading = hideLoading;
-window.buyArtworkFromModal = buyArtworkFromModal;
-window.showBlockchainDetails = showBlockchainDetails;
-window.closeBlockchainModal = closeBlockchainModal;
-window.submitArtworkReview = submitArtworkReview;
-window.loadArtworkReviews = loadArtworkReviews;
 
 
-// Make sure all functions are defined above this line
-document.addEventListener("DOMContentLoaded", () => {
-  Object.assign(window, {
-    connectWallet,
-    disconnectWallet,
-    toggleCart,
-    addToCart,
-    removeFromCart,
-    clearCart,
-    checkout,
-    showSection,
-    loadArtworksLive,
-    filterArtworks,
-    submitArtwork,
-    approveAllArtworks,
-    viewReports,
-    exportData,
-    viewAllUsers,
-    viewTransactions,
-    enableUsernameEdit,
-    saveUsername,
-    enableBioEdit,
-    saveBio,
-    showArtworkDetail,
-    closeArtworkModal,
-    showArtistProfile,
-    closeResellModal,
-    confirmResell,
-    closeBlockchainModal,
-    closeDetailsModal,
-    closeArtistModal,
-    viewArtworkDetails,
-    openResellModal,
-    resellArtwork,
-    loadUserPurchasesLive,
-    loadUserArtworksLive,
-    hideLoading,
-    buyArtworkFromModal,
-    showBlockchainDetails,
-    closeBlockchainModal,
-    submitArtworkReview,
-    loadArtworkReviews,
-  });
-});
 
 
 
