@@ -1644,7 +1644,7 @@ async function showArtistProfile(walletAddr) {
 
             return `
               <div class="portfolio-item" style="cursor:pointer;"
-                  onclick="(); showArtworkDetail('${artId}');">
+                  onclick="showArtworkDetail('${artId}')">
                 <img src="${imageUrl}" alt="${title}" loading="lazy"
                     style="width:160px; height:110px; object-fit:cover; border-radius:8px;">
                 <div class="portfolio-item-meta" style="margin-top:6px; text-align:left;">
