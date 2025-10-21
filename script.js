@@ -2888,8 +2888,7 @@ async function submitArtworkReview() {
   }
 
   try {
-    const db = await waitForFirebase();
-    
+    // 🔥 No need for waitForFirebase(), we already have db globally
     await addDoc(collection(db, "reviews_artworks"), {
       artworkId: artworkTitle,
       reviewerId: walletAddress,
@@ -2900,17 +2899,23 @@ async function submitArtworkReview() {
     });
 
     showToast("Review added successfully!", "success");
-    
-    // Reset form
+
+    // ✅ Reset form
     document.getElementById("reviewComment").value = "";
     selectedRating = 0;
     updateStarDisplay(0);
-    
+
+    // Optionally reload reviews after submission
+    if (typeof loadArtworkReviews === "function") {
+      loadArtworkReviews(artworkTitle);
+    }
+
   } catch (err) {
     console.error("Error adding review:", err);
     showToast("Failed to add review", "error");
   }
 }
+
 
 // ============================================
 // 🔧 STAR RATING DISPLAY
@@ -3081,6 +3086,7 @@ window.loadArtworkReviews = loadArtworkReviews;
 console.log("✅ Modal handlers initialized");
 
 console.log("✅ Core functions loaded and exposed globally");
+
 
 
 
