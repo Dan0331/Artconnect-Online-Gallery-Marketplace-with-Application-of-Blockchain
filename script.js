@@ -2634,16 +2634,23 @@ window.addEventListener("click", (event) => {
 });
 
 
-function showLoading() {
-    const overlay = document.getElementById('loadingOverlay');
-    if (overlay) overlay.style.display = 'flex';
-    showLoadingText("Processing your transaction...");
+function showLoading(text = "Processing your transaction...") {
+  const overlay = document.getElementById('loadingOverlay');
+  const textElem = overlay?.querySelector('.loading-text');
+
+  if (textElem) textElem.textContent = text;
+  if (overlay) {
+    overlay.style.display = 'flex';
+    // Force a reflow so browser renders the overlay immediately
+    overlay.offsetHeight; 
+  }
 }
 
 function hideLoading() {
-    const overlay = document.getElementById('loadingOverlay');
-    if (overlay) overlay.style.display = 'none';
+  const overlay = document.getElementById('loadingOverlay');
+  if (overlay) overlay.style.display = 'none';
 }
+
 
 function showLoadingText(text) {
     const textElem = document.querySelector('.loading-text');
@@ -2976,6 +2983,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadArtworkReviews,
   });
 });
+
 
 
 
