@@ -1878,7 +1878,6 @@ function viewTransactions() {
 
 
 
-let currentUser = null;
 const USERNAME_COOLDOWN = 0; //60 * 24 * 60 * 60 * 1000; // 60 days
 
 async function loadUserProfileFromDB(walletAddr) {
@@ -3031,4 +3030,5 @@ window.openResellModal = openResellModal;
 console.log("✅ Modal handlers initialized");
 
 console.log("✅ Core functions loaded and exposed globally");
+
 
