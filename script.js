@@ -2455,7 +2455,6 @@ function renderArtworkCard(art) {
 }
 
 
-let selectedResellArtId = null;
 
 // ============================================
 // 🔧 OPEN RESELL MODAL
@@ -3027,6 +3026,7 @@ window.openResellModal = openResellModal;
 console.log("✅ Modal handlers initialized");
 
 console.log("✅ Core functions loaded and exposed globally");
+
 
 
 
