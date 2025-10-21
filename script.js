@@ -2925,6 +2925,7 @@ window.resellArtwork = resellArtwork;
 window.loadUserPurchasesLive = loadUserPurchasesLive;
 window.loadUserArtworksLive = loadUserArtworksLive;
 window.hideLoading = hideLoading;
+window.showLoading = showLoading;
 window.buyArtworkFromModal = buyArtworkFromModal;
 window.showBlockchainDetails = showBlockchainDetails;
 window.closeBlockchainModal = closeBlockchainModal;
@@ -2966,6 +2967,7 @@ document.addEventListener("DOMContentLoaded", () => {
     resellArtwork,
     loadUserPurchasesLive,
     loadUserArtworksLive,
+    showloading,
     hideLoading,
     buyArtworkFromModal,
     showBlockchainDetails,
@@ -2974,6 +2976,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadArtworkReviews,
   });
 });
+
 
 
 
