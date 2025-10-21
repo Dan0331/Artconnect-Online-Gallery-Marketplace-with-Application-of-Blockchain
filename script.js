@@ -15,8 +15,12 @@ import {
   setDoc, 
   getDoc, 
   deleteDoc, 
-  runTransaction 
+  runTransaction,
+  addDoc, 
+  query, 
+  where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 
 
 // 🔹 Global wallet recovery after refresh (respects manual logout)
@@ -2755,7 +2759,7 @@ function closeBlockchainModal() {
 // ==========================
 // 🟣 ARTWORK REVIEW SYSTEM
 // ==========================
-import { addDoc, collection, query, where, onSnapshot } 
+
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // 🔹 Load reviews for a specific artwork
@@ -2949,6 +2953,7 @@ document.addEventListener("DOMContentLoaded", () => {
     closeBlockchainModal,
   });
 });
+
 
 
 
