@@ -1642,15 +1642,13 @@ body {
 }
 
 /* === Loading Overlay === */
-}
-
 .loading-overlay {
   display: none;
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(3px);
-  z-index: 10000;
+  z-index: 100000;
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -1833,6 +1831,7 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   color: #1a202c;
 } 
+
 
 
 
