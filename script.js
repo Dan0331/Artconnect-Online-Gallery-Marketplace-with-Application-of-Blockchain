@@ -695,62 +695,58 @@ function filterArtworks() {
 }
 
 function showArtworkDetail(artworkId) {
-    const artwork = [...submittedArtworks].find(item => String(item.id) === String(artworkId));
-    if (!artwork) return;
-    
-    const modal = document.getElementById('artworkModal');
-    const detailContainer = document.getElementById('artworkDetail');
+  const artwork = [...submittedArtworks].find(item => String(item.id) === String(artworkId));
+  if (!artwork) return;
+  
+  const modal = document.getElementById('artworkModal');
+  const detailContainer = document.getElementById('artworkDetail');
 
-    detailContainer.innerHTML = `
-        <img src="${getImageUrl(artwork.imageUrl)}" alt="${artwork.title}" class="artwork-detail-image">
-        <div class="artwork-detail-info">
-            <h2>${artwork.title}</h2>
-            <p class="artwork-detail-artist">by ${artwork.artist}</p>
-            <div class="artwork-detail-meta">
-                <span>${artwork.category}</span>
-                <span>${artwork.year}</span>
-                <span>${artwork.dimension}</span>
-            </div>
-            <p class="artwork-detail-description">${artwork.description}</p>
-            <div class="artwork-status-detail">
-                <span class="status-badge ${getArtworkStatus(artwork.id)}">${getArtworkStatusText(artwork.id)}</span>
-            </div>
-            <div class="artwork-detail-footer">
-                <span class="artwork-detail-price">${artwork.price} tETH</span>
-                <div class="detail-actions">
-                    <button class="btn btn-secondary" onclick="showArtistProfile('${(artwork.sellerId||'').toLowerCase()}')">
-                        <i class="fas fa-user"></i> View Artist
-                    </button>
-                    <button class="btn btn-secondary blockchain-btn" data-id="${artwork.id}">
-                      <i class="fab fa-ethereum"></i> History
-                    </button>
-                    <button class="btn btn-primary enhanced-add-btn" onclick="addToCart(${artwork.id}); closeArtworkModal();" ${!artwork.inStock ? 'disabled' : ''}>
-                        <i class="fas fa-shopping-basket"></i> ${artwork.inStock ? 'Add to Basket' : 'Out of Stock'}
-                    </button>
-                </div>
-            </div></to_replace>
-</Editor.edit_file_by_replace>
-
-<Editor.edit_file_by_replace>
-<file_name></file_name>
-<to_replace>                <div class="cart-actions">
-                    <button class="btn-primary" onclick="checkout()" id="checkoutBtn">Checkout</button>
-                </div></to_replace>
-<new_content>
-        </div>
-    `;
+  // 🖼️ Load artwork info dynamically
+  detailContainer.innerHTML = `
+      <img src="${getImageUrl(artwork.imageUrl)}" alt="${artwork.title}" class="artwork-detail-image">
+      <div class="artwork-detail-info">
+          <h2>${artwork.title}</h2>
+          <p class="artwork-detail-artist">by ${artwork.artist}</p>
+          <div class="artwork-detail-meta">
+              <span>${artwork.category}</span>
+              <span>${artwork.year}</span>
+              <span>${artwork.dimension}</span>
+          </div>
+          <p class="artwork-detail-description">${artwork.description}</p>
+          <div class="artwork-status-detail">
+              <span class="status-badge ${getArtworkStatus(artwork.id)}">${getArtworkStatusText(artwork.id)}</span>
+          </div>
+          <div class="artwork-detail-footer">
+              <span class="artwork-detail-price">${artwork.price} tETH</span>
+              <div class="detail-actions">
+                  <button class="btn btn-secondary" onclick="showArtistProfile('${(artwork.sellerId||'').toLowerCase()}')">
+                      <i class="fas fa-user"></i> View Artist
+                  </button>
+                  <button class="btn btn-secondary blockchain-btn" data-id="${artwork.id}">
+                    <i class="fab fa-ethereum"></i> History
+                  </button>
+                  <button class="btn btn-primary enhanced-add-btn" onclick="addToCart(${artwork.id}); closeArtworkModal();" ${!artwork.inStock ? 'disabled' : ''}>
+                      <i class="fas fa-shopping-basket"></i> ${artwork.inStock ? 'Add to Basket' : 'Out of Stock'}
+                  </button>
+              </div>
+          </div>
+      </div>
+  `;
 
   const blockchainBtn = detailContainer.querySelector(".blockchain-btn");
-  
   if (blockchainBtn) {
     blockchainBtn.addEventListener("click", (e) => {
       const artId = e.currentTarget.dataset.id;
       showBlockchainDetails(artId);
     });
   }
-    
-    modal.style.display = 'block';
+
+  modal.style.display = 'block';
+
+  // ⭐ NEW LINE: Load artwork reviews after modal opens
+  loadArtworkReviews(artwork.title);
 }
+
 
 function closeArtworkModal() {
     document.getElementById('artworkModal').style.display = 'none';
@@ -2949,6 +2945,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadArtworkReviews,
   });
 });
+
 
 
 
