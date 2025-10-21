@@ -512,12 +512,13 @@
 <div id="reviewsSection" class="reviews-section">
   <h3>Artwork Reviews</h3>
 
+  <!-- ⭐ Average Rating Display -->
+  <div id="averageRatingContainer"></div>
+
   <div id="reviewList">No reviews yet...</div>
 
   <div id="addReviewForm" class="add-review-form">
     <h4>Leave a Review</h4>
-
-    <!-- ⭐ Star Rating -->
     <div class="star-rating" id="starRating">
       <i class="fa-regular fa-star" data-value="1"></i>
       <i class="fa-regular fa-star" data-value="2"></i>
@@ -525,15 +526,14 @@
       <i class="fa-regular fa-star" data-value="4"></i>
       <i class="fa-regular fa-star" data-value="5"></i>
     </div>
-
     <div class="form-group">
       <label for="reviewComment">Your Comment</label>
       <textarea id="reviewComment" rows="3" placeholder="Share your thoughts about this artwork..."></textarea>
     </div>
-
     <button class="btn btn-primary" onclick="submitArtworkReview()">Submit Review</button>
   </div>
 </div>
+
 
 
     <!-- Artwork Details Modal -->
@@ -660,6 +660,7 @@
 
 </body>
 </html>
+
 
 
 
