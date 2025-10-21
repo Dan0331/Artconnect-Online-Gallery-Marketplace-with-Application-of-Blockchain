@@ -1740,6 +1740,49 @@ body {
 .history-row:last-child {
   border-bottom: none;
 }
+/* ==========================
+   🎨 Reviews Section
+========================== */
+.reviews-section {
+  margin-top: 2rem;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1.5rem;
+}
+
+.review-item {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.review-item strong {
+  color: #1a202c;
+  font-weight: 600;
+}
+
+.review-item span {
+  color: #f6ad55;
+  margin-left: 0.5rem;
+  font-weight: 500;
+}
+
+.review-item small {
+  color: #94a3b8;
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+}
+
+.add-review-form {
+  margin-top: 1rem;
+}
+
+.add-review-form .form-group {
+  margin-bottom: 1rem;
+}
+
 
 
 
