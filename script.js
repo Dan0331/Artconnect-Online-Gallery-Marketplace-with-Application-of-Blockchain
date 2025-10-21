@@ -1,25 +1,5 @@
-// ============================================
-// 🔧 CRITICAL FIX: Import Firestore at the TOP
-// ============================================
-import { 
-  collection, 
-  onSnapshot, 
-  doc, 
-  setDoc, 
-  getDoc,
-  getDocs,
-  deleteDoc, 
-  runTransaction,
-  addDoc, 
-  query, 
-  where,
-  updateDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-// ============================================
-// 🌍 GLOBAL STATE
-// ============================================
-let currentArtworks = [];
+// Global state
+let currentArtworks = [];//...artworkData];
 let cart = JSON.parse(localStorage.getItem('artconnect_cart') || '[]');
 let walletConnected = false;
 let walletAddress = null;
@@ -28,10 +8,19 @@ let isAdmin = false;
 const USER_DISCONNECTED_KEY = 'walletDisconnectedByUser';
 let unsubscribeArtworks = null;
 let unsubscribePurchases = null;
-let currentUser = null;
-const USERNAME_COOLDOWN = 0;
-let selectedRating = 0;
-let selectedResellArtId = null;
+import { 
+  collection, 
+  onSnapshot, 
+  doc, 
+  setDoc, 
+  getDoc, 
+  deleteDoc, 
+  runTransaction,
+  addDoc, 
+  query, 
+  where
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 
 
 // 🔹 Global wallet recovery after refresh (respects manual logout)
@@ -586,13 +575,16 @@ async function loadArtworksLive() {
 
 function getImageUrl(url) {
     if (!url) return '';
+
+    // Check if it's a Google Drive link
     if (url.includes("drive.google.com")) {
-        const match = url.match(/[-\w]{25,}/);
+        const match = url.match(/[-\w]{25,}/); // Extracts the file ID
         if (match) {
             return `https://drive.google.com/uc?export=view&id=${match[0]}`;
         }
     }
-    return url;
+    return url; // return original if not Drive
+}
 
 function renderArtworks(artworks) {
     const artworkGrid = document.getElementById('artworkGrid');
@@ -704,19 +696,10 @@ function filterArtworks() {
 
 function showArtworkDetail(artworkId) {
   const artwork = [...submittedArtworks].find(item => String(item.id) === String(artworkId));
-  if (!artwork) {
-    console.error("❌ Artwork not found:", artworkId);
-    showToast("Artwork not found", "error");
-    return;
-  }
+  if (!artwork) return;
   
   const modal = document.getElementById('artworkModal');
   const detailContainer = document.getElementById('artworkDetail');
-  
-  if (!modal || !detailContainer) {
-    console.error("❌ Modal elements not found");
-    return;
-  }
 
   // 🖼️ Load artwork info dynamically
   detailContainer.innerHTML = `
@@ -731,18 +714,18 @@ function showArtworkDetail(artworkId) {
           </div>
           <p class="artwork-detail-description">${artwork.description}</p>
           <div class="artwork-status-detail">
-              <span class="status-badge ${artwork.status || 'new'}">${artwork.status === 'resold' ? 'RESOLD' : 'BRAND NEW'}</span>
+              <span class="status-badge ${getArtworkStatus(artwork.id)}">${getArtworkStatusText(artwork.id)}</span>
           </div>
           <div class="artwork-detail-footer">
               <span class="artwork-detail-price">${artwork.price} tETH</span>
               <div class="detail-actions">
-                  <button class="btn btn-secondary" onclick="showArtistProfile('${(artwork.sellerId || '').toLowerCase()}')">
+                  <button class="btn btn-secondary" onclick="showArtistProfile('${(artwork.sellerId||'').toLowerCase()}')">
                       <i class="fas fa-user"></i> View Artist
                   </button>
                   <button class="btn btn-secondary blockchain-btn" data-id="${artwork.id}">
                     <i class="fab fa-ethereum"></i> History
                   </button>
-                  <button class="btn btn-primary enhanced-add-btn" onclick="addToCart('${artwork.id}'); closeArtworkModal();" ${!artwork.inStock ? 'disabled' : ''}>
+                  <button class="btn btn-primary enhanced-add-btn" onclick="addToCart(${artwork.id}); closeArtworkModal();" ${!artwork.inStock ? 'disabled' : ''}>
                       <i class="fas fa-shopping-basket"></i> ${artwork.inStock ? 'Add to Basket' : 'Out of Stock'}
                   </button>
               </div>
@@ -750,7 +733,6 @@ function showArtworkDetail(artworkId) {
       </div>
   `;
 
-  // Setup blockchain button
   const blockchainBtn = detailContainer.querySelector(".blockchain-btn");
   if (blockchainBtn) {
     blockchainBtn.addEventListener("click", (e) => {
@@ -759,19 +741,15 @@ function showArtworkDetail(artworkId) {
     });
   }
 
-  // ✅ SHOW MODAL
   modal.style.display = 'block';
 
-  // ⭐ Load artwork reviews
+  // ⭐ NEW LINE: Load artwork reviews after modal opens
   loadArtworkReviews(artwork.title);
 }
 
 
 function closeArtworkModal() {
-    const modal = document.getElementById('artworkModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
+    document.getElementById('artworkModal').style.display = 'none';
 }
 
 // Cart functionality
@@ -995,13 +973,9 @@ async function checkout() {
     return;
   }
 
-  // Show the overlay and let the browser render it before heavy work
   showLoading();
   showLoadingText("Preparing your transactions...");
   showToast('Processing payment...', 'warning');
-
-  // Wait a tiny bit to allow the overlay to render visually
-  await new Promise((resolve) => setTimeout(resolve, 100));
 
   try {
     let successfulPurchases = 0;
@@ -1219,13 +1193,9 @@ function sendMessage(event) {
     event.target.reset();
 }
 
-// ============================================
-// 🔧 TOAST NOTIFICATION
-// ============================================
+// Toast notification system
 function showToast(message, type = 'info') {
     const toastContainer = document.getElementById('toastContainer');
-    if (!toastContainer) return;
-    
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.innerHTML = `
@@ -1237,19 +1207,20 @@ function showToast(message, type = 'info') {
     
     toastContainer.appendChild(toast);
     
+    // Auto remove after 4 seconds
     setTimeout(() => {
         if (toast.parentNode) {
             toast.parentNode.removeChild(toast);
         }
     }, 4000);
     
+    // Remove on click
     toast.addEventListener('click', () => {
         if (toast.parentNode) {
             toast.parentNode.removeChild(toast);
         }
     });
 }
-
 
 function getToastIcon(type) {
     switch (type) {
@@ -1259,6 +1230,7 @@ function getToastIcon(type) {
         default: return 'info-circle';
     }
 }
+
 // Close modals when clicking outside
 window.addEventListener('click', function(event) {
     const cartModal = document.getElementById('cartModal');
@@ -1612,9 +1584,7 @@ async function showArtistProfile(walletAddr) {
     return;
   }
 
-  // ✅ SHOW MODAL FIRST
   modal.style.display = "block";
-  
   profileContainer.innerHTML = `
     <div style="text-align:center; padding:2rem;">
       <p>Loading artist details...</p>
@@ -1622,22 +1592,32 @@ async function showArtistProfile(walletAddr) {
   `;
 
   try {
-    const db = await waitForFirebase();
-    
+    // Step 1 — Try to load Firestore user data
     const userSnap = await getDoc(doc(db, "users", walletAddr));
-    let userData = userSnap.exists() ? userSnap.data() : {};
+    let userData = {};
+    if (userSnap.exists()) {
+      userData = userSnap.data();
+    }
 
+    // Step 2 — Try to supplement missing data from submittedArtworks
     const artistArts = submittedArtworks.filter(
       a => a.sellerId?.toLowerCase() === walletAddr
     );
 
-    const username = userData.username || artistArts[0]?.artist || "Unknown Artist";
-    const bio = userData.bio || "This artist has not added a bio yet.";
-    const joined = userData.joinedAt ? new Date(userData.joinedAt).getFullYear() : "—";
+    const username =
+      userData.username ||
+      artistArts[0]?.artist ||
+      "Unknown Artist";
 
+    const bio = userData.bio || "This artist has not added a bio yet.";
+    const joined = userData.joinedAt
+      ? new Date(userData.joinedAt).getFullYear()
+      : "—";
+
+    // Step 3 — Try to fetch artworks from Firestore (users/[wallet]/sellingArts)
     let artDocs = [];
     try {
-      const sellingArtsRef = collection(db, "users", walletAddr, "sellingArts");
+      const sellingArtsRef = collection(db, "users", walletAddr.toLowerCase(), "sellingArts");
       const artSnap = await getDocs(sellingArtsRef);
       artSnap.forEach(docSnap => {
         artDocs.push({ id: docSnap.id, ...docSnap.data() });
@@ -1646,35 +1626,39 @@ async function showArtistProfile(walletAddr) {
       console.warn("⚠️ Could not load sellingArts, using submittedArtworks fallback", e);
     }
 
+    // Step 4 — Fallback to submittedArtworks if Firestore collection is empty
     if (artDocs.length === 0 && artistArts.length > 0) {
       artDocs = artistArts;
     }
 
-    const artworksHTML = artDocs.length > 0
-      ? artDocs.map(art => {
-          const imageUrl = getImageUrl(art.imageUrl || "");
-          const title = art.title || "Untitled";
-          const price = art.price || "0.000";
-          const category = art.category || "Uncategorized";
-          const year = art.year || "—";
-          const artId = art.id || "";
+    // Step 5 — Generate artwork cards
+    const artworksHTML =
+      artDocs.length > 0
+        ? artDocs.map(art => {
+            const imageUrl = getImageUrl(art.imageUrl || "");
+            const title = art.title || "Untitled";
+            const price = art.price || "0.000";
+            const category = art.category || "Uncategorized";
+            const year = art.year || "—";
+            const artId = art.id || "";
 
-          return `
-            <div class="portfolio-item" style="cursor:pointer;"
-                onclick="showArtworkDetail('${artId}')">
-              <img src="${imageUrl}" alt="${title}" loading="lazy"
-                  style="width:160px; height:110px; object-fit:cover; border-radius:8px;">
-              <div class="portfolio-item-meta" style="margin-top:6px; text-align:left;">
-                <strong style="font-size:0.95rem;">${title}</strong>
-                <div style="font-size:0.85rem; color:#666;">
-                  ${category} • ${year} • ${price} tETH
+            return `
+              <div class="portfolio-item" style="cursor:pointer;"
+                  onclick="(); showArtworkDetail('${artId}');">
+                <img src="${imageUrl}" alt="${title}" loading="lazy"
+                    style="width:160px; height:110px; object-fit:cover; border-radius:8px;">
+                <div class="portfolio-item-meta" style="margin-top:6px; text-align:left;">
+                  <strong style="font-size:0.95rem;">${title}</strong>
+                  <div style="font-size:0.85rem; color:#666;">
+                    ${category} • ${year} • ${price} tETH
+                  </div>
                 </div>
               </div>
-            </div>
-          `;
-        }).join("")
-      : `<p style="margin-top:1rem;">No artworks available yet.</p>`;
+            `;
+          }).join("")
+        : `<p style="margin-top:1rem;">No artworks available yet.</p>`;
 
+    // Step 6 — Render the final modal content
     profileContainer.innerHTML = `
       <div class="artist-profile" style="padding:1rem 1.5rem;">
         <div style="display:flex; gap:1rem; align-items:center; margin-bottom:1rem;">
@@ -1688,7 +1672,9 @@ async function showArtistProfile(walletAddr) {
             <div style="color:#6b7280; font-size:0.95rem;">Joined ${joined}</div>
           </div>
         </div>
+
         <p class="artist-bio" style="color:#374151; margin-bottom:1rem;">${bio}</p>
+
         <h3 style="margin:0 0 0.5rem;">Portfolio</h3>
         <div class="artist-portfolio-grid" style="display:flex; gap:1rem; flex-wrap:wrap;">
           ${artworksHTML}
@@ -1706,10 +1692,7 @@ async function showArtistProfile(walletAddr) {
 
 
 function closeArtistModal() {
-    const modal = document.getElementById('artistModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
+    document.getElementById('artistModal').style.display = 'none';
 }
 
 //Blockchain Details Functions
@@ -2457,18 +2440,11 @@ function renderArtworkCard(art) {
 
 let selectedResellArtId = null;
 
-// ============================================
-// 🔧 OPEN RESELL MODAL
-// ============================================
 function openResellModal(artId, artTitle, currentPrice = 0) {
     selectedResellArtId = artId;
     document.getElementById("resellArtTitle").textContent = `Reselling: ${artTitle}`;
-    document.getElementById("resellPrice").value = currentPrice || 0.001;
-    
-    const modal = document.getElementById("resellModal");
-    if (modal) {
-        modal.style.display = "flex";
-    }
+    document.getElementById("resellPrice").value = currentPrice || 0.001; // Auto-fill current price
+    document.getElementById("resellModal").style.display = "flex";
 }
 
 // Close modal
@@ -2590,7 +2566,6 @@ async function resellArtwork(artId, newPrice) {
 
 async function viewArtworkDetails(artId, source) {
     try {
-        const db = await waitForFirebase();
         let docRef;
 
         if (source === "submissions") {
@@ -2615,6 +2590,7 @@ async function viewArtworkDetails(artId, source) {
 
         const art = docSnap.data().artwork || docSnap.data();
 
+        // Populate modal
         document.getElementById("detailsImage").src = getImageUrl(art.imageUrl);
         document.getElementById("detailsTitle").textContent = art.title || "Untitled";
         document.getElementById("detailsArtist").textContent = art.artist || "Unknown Artist";
@@ -2624,7 +2600,7 @@ async function viewArtworkDetails(artId, source) {
         document.getElementById("detailsDimensions").textContent = art.dimension || "—";
         document.getElementById("detailsPrice").textContent = `${art.price || "0.000"} tETH`;
 
-        // ✅ SHOW MODAL
+        // Show modal
         document.getElementById("artDetailsModal").style.display = "flex";
 
     } catch (error) {
@@ -2632,17 +2608,17 @@ async function viewArtworkDetails(artId, source) {
         showToast("Failed to load artwork details.", "error");
     }
 }
+
 function openDetailsModal() {
   const modal = document.getElementById("artDetailsModal");
   modal.style.display = "flex";
 }
 
 function closeDetailsModal() {
-    const modal = document.getElementById('artDetailsModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
+  const modal = document.getElementById("artDetailsModal");
+  modal.style.display = "none";
 }
+
 window.addEventListener("click", (event) => {
   const modal = document.getElementById("artDetailsModal");
   const content = document.getElementById("artDetailsContent");
@@ -2653,31 +2629,21 @@ window.addEventListener("click", (event) => {
 });
 
 
-// ============================================
-// 🎨 LOADING OVERLAY FUNCTIONS
-// ============================================
 function showLoading() {
     const overlay = document.getElementById('loadingOverlay');
-    if (overlay) {
-        overlay.style.display = 'flex';
-    }
+    if (overlay) overlay.style.display = 'flex';
     showLoadingText("Processing your transaction...");
 }
 
 function hideLoading() {
     const overlay = document.getElementById('loadingOverlay');
-    if (overlay) {
-        overlay.style.display = 'none';
-    }
+    if (overlay) overlay.style.display = 'none';
 }
 
 function showLoadingText(text) {
     const textElem = document.querySelector('.loading-text');
-    if (textElem) {
-        textElem.textContent = text;
-    }
+    if (textElem) textElem.textContent = text;
 }
-
 function onWalletReady(callback) {
     if (window.ethereum && window.ethereum.selectedAddress) {
         callback(window.ethereum.selectedAddress);
@@ -2687,9 +2653,6 @@ function onWalletReady(callback) {
         });
     }
 }
-// ============================================
-// 🔧 WAIT FOR FIREBASE
-// ============================================
 function waitForFirebase() {
   return new Promise(resolve => {
     const check = () => {
@@ -2699,7 +2662,6 @@ function waitForFirebase() {
     check();
   });
 }
-
 function renderUserPurchases(purchases) {
     const purchasesGrid = document.getElementById('userPurchases');
     if (!purchasesGrid) return;
@@ -2787,90 +2749,72 @@ function showBlockchainDetails(artworkId) {
 }
 
 function closeBlockchainModal() {
-    const modal = document.getElementById('blockchainModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
+  document.getElementById("blockchainModal").style.display = "none";
 }
-
 
 // ==========================
 // 🟣 ARTWORK REVIEW SYSTEM
 // ==========================
 
-async function loadArtworkReviews(artworkId) {
-  console.log("📝 Loading reviews for:", artworkId);
-  
+// 🔹 Load reviews for a specific artwork
+function loadArtworkReviews(artworkId) {
   const reviewList = document.getElementById('reviewList');
-  const avgContainer = document.getElementById('averageRatingContainer');
-  
-  if (!reviewList) {
-    console.warn("⚠️ reviewList element not found");
-    return;
-  }
+  if (!reviewList) return;
 
   reviewList.innerHTML = '<p>Loading reviews...</p>';
 
-  try {
-    const db = await waitForFirebase();
-    const reviewsRef = collection(db, "reviews_artworks");
-    const q = query(reviewsRef, where("artworkId", "==", artworkId));
+  const reviewsRef = collection(db, "reviews_artworks");
+  const q = query(reviewsRef, where("artworkId", "==", artworkId));
 
-    onSnapshot(q, (snapshot) => {
-      if (!avgContainer) return;
+  onSnapshot(q, (snapshot) => {
+    const avgContainer = document.getElementById("averageRatingContainer");
+    if (!avgContainer) return;
 
-      if (snapshot.empty) {
-        reviewList.innerHTML = '<p>No reviews yet. Be the first to write one!</p>';
-        avgContainer.innerHTML = `<p class="average-rating-text">⭐ No ratings yet</p>`;
-        return;
-      }
+    if (snapshot.empty) {
+      reviewList.innerHTML = '<p>No reviews yet. Be the first to write one!</p>';
+      avgContainer.innerHTML = `<p class="average-rating-text">⭐ No ratings yet</p>`;
+      return;
+    }
 
-      // Calculate average rating
-      const ratings = snapshot.docs.map(doc => doc.data().rating || 0);
-      const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
-      const avgFixed = avg.toFixed(1);
-      const reviewCount = snapshot.docs.length;
+    // 🔹 Compute average rating
+    const ratings = snapshot.docs.map(doc => doc.data().rating || 0);
+    const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+    const avgFixed = avg.toFixed(1);
+    const reviewCount = snapshot.docs.length;
 
-      // Create star display
-      const fullStars = Math.round(avg);
-      const starDisplay = "★".repeat(fullStars) + "☆".repeat(5 - fullStars);
+    // 🔹 Create star display (rounded to nearest whole)
+    const fullStars = Math.round(avg);
+    const starDisplay = "★".repeat(fullStars) + "☆".repeat(5 - fullStars);
 
-      // Update average rating section
-      avgContainer.innerHTML = `
-        <p class="average-rating-text">
-          ${starDisplay} ${avgFixed}/5 (${reviewCount} Review${reviewCount > 1 ? "s" : ""})
-        </p>
+    // 🔹 Update average rating section
+    avgContainer.innerHTML = `
+      <p class="average-rating-text">
+        ${starDisplay} ${avgFixed}/5 (${reviewCount} Review${reviewCount > 1 ? "s" : ""})
+      </p>
+    `;
+
+    // 🔹 Display each review below
+    const reviewsHTML = snapshot.docs.map(doc => {
+      const data = doc.data();
+      const stars = "★".repeat(Math.round(data.rating)) + "☆".repeat(5 - Math.round(data.rating));
+      return `
+        <div class="review-item">
+          <strong>${data.reviewerName || "Anonymous"}</strong>
+          <span class="star-rating">${stars}</span>
+          <p>${data.comment}</p>
+          <small>${new Date(data.createdAt).toLocaleString()}</small>
+        </div>
       `;
+    }).join('');
 
-      // Display each review
-      const reviewsHTML = snapshot.docs.map(doc => {
-        const data = doc.data();
-        const stars = "★".repeat(Math.round(data.rating)) + "☆".repeat(5 - Math.round(data.rating));
-        return `
-          <div class="review-item">
-            <strong>${data.reviewerName || "Anonymous"}</strong>
-            <span class="star-rating">${stars}</span>
-            <p>${data.comment}</p>
-            <small>${new Date(data.createdAt).toLocaleString()}</small>
-          </div>
-        `;
-      }).join('');
-
-      reviewList.innerHTML = reviewsHTML;
-    });
-  } catch (err) {
-    console.error("Error loading reviews:", err);
-    reviewList.innerHTML = '<p style="color:red;">Failed to load reviews</p>';
-  }
+    reviewList.innerHTML = reviewsHTML;
+  });
 }
 
 
 
-// ============================================
-// 🔧 SUBMIT ARTWORK REVIEW
-// ============================================
 async function submitArtworkReview() {
-  const comment = document.getElementById("reviewComment")?.value.trim();
+  const comment = document.getElementById("reviewComment").value.trim();
   const artworkTitle = document.querySelector(".artwork-detail-info h2")?.textContent;
 
   if (!walletConnected || !walletAddress) {
@@ -2878,19 +2822,12 @@ async function submitArtworkReview() {
     return;
   }
 
-  if (!selectedRating || selectedRating === 0) {
+  if (selectedRating === 0) {
     showToast("Please select a star rating", "error");
     return;
   }
 
-  if (!comment) {
-    showToast("Please write a comment", "error");
-    return;
-  }
-
   try {
-    const db = await waitForFirebase();
-    
     await addDoc(collection(db, "reviews_artworks"), {
       artworkId: artworkTitle,
       reviewerId: walletAddress,
@@ -2901,21 +2838,38 @@ async function submitArtworkReview() {
     });
 
     showToast("Review added successfully!", "success");
-    
-    // Reset form
     document.getElementById("reviewComment").value = "";
     selectedRating = 0;
     updateStarDisplay(0);
-    
   } catch (err) {
     console.error("Error adding review:", err);
     showToast("Failed to add review", "error");
   }
 }
+// 🟡 Interactive Star Rating
+let selectedRating = 0;
 
-// ============================================
-// 🔧 STAR RATING DISPLAY
-// ============================================
+document.addEventListener("DOMContentLoaded", () => {
+  const stars = document.querySelectorAll("#starRating i");
+  if (!stars.length) return;
+
+  stars.forEach(star => {
+    star.addEventListener("click", () => {
+      selectedRating = parseInt(star.getAttribute("data-value"));
+      updateStarDisplay(selectedRating);
+    });
+
+    star.addEventListener("mouseover", () => {
+      const hoverValue = parseInt(star.getAttribute("data-value"));
+      updateStarDisplay(hoverValue);
+    });
+
+    star.addEventListener("mouseleave", () => {
+      updateStarDisplay(selectedRating);
+    });
+  });
+});
+
 function updateStarDisplay(value) {
   const stars = document.querySelectorAll("#starRating i");
   stars.forEach(star => {
@@ -2929,58 +2883,89 @@ function updateStarDisplay(value) {
     }
   });
 }
-
-// ============================================
-// 🔧 INITIALIZE STAR RATING SYSTEM
-// ============================================
-function initializeStarRating() {
-  console.log("⭐ Initializing star rating system");
-  
-  const stars = document.querySelectorAll("#starRating i");
-  if (!stars.length) {
-    console.warn("⚠️ Star rating elements not found");
-    return;
-  }
-
-  stars.forEach(star => {
-    // Click to select rating
-    star.addEventListener("click", function() {
-      selectedRating = parseInt(this.getAttribute("data-value"));
-      updateStarDisplay(selectedRating);
-      console.log("Selected rating:", selectedRating);
-    });
-
-    // Hover effect
-    star.addEventListener("mouseover", function() {
-      const hoverValue = parseInt(this.getAttribute("data-value"));
-      updateStarDisplay(hoverValue);
-    });
-
-    // Reset on mouse leave
-    star.addEventListener("mouseleave", function() {
-      updateStarDisplay(selectedRating);
-    });
-  });
-}
 // script.js
-// ============================================
-// 🌍 EXPOSE ALL FUNCTIONS GLOBALLY
-// ============================================
-window.showLoading = showLoading;
-window.hideLoading = hideLoading;
-window.showLoadingText = showLoadingText;
+window.submitArtworkReview = submitArtworkReview;
+window.loadArtworkReviews = loadArtworkReviews;
+window.connectWallet = connectWallet;
+window.disconnectWallet = disconnectWallet;
+window.toggleCart = toggleCart;
+window.addToCart = addToCart;
+window.removeFromCart = removeFromCart;
+window.clearCart = clearCart;
+window.checkout = checkout;
+window.showSection = showSection;
+window.loadArtworksLive = loadArtworksLive;
+window.filterArtworks = filterArtworks;
+window.submitArtwork = submitArtwork;
+window.approveAllArtworks = approveAllArtworks;
+window.viewReports = viewReports;
+window.exportData = exportData;
+window.viewAllUsers = viewAllUsers;
+window.viewTransactions = viewTransactions;
+window.enableUsernameEdit = enableUsernameEdit;
+window.saveUsername = saveUsername;
+window.enableBioEdit = enableBioEdit;
+window.saveBio = saveBio;
+window.showArtworkDetail = showArtworkDetail;
 window.closeArtworkModal = closeArtworkModal;
-window.closeArtistModal = closeArtistModal;
+window.showArtistProfile = showArtistProfile;
+window.closeResellModal = closeResellModal;
+window.confirmResell = confirmResell;
 window.closeBlockchainModal = closeBlockchainModal;
 window.closeDetailsModal = closeDetailsModal;
-window.closeResellModal = closeResellModal;
-window.showArtistProfile = showArtistProfile;
+window.closeArtistModal = closeArtistModal;
 window.viewArtworkDetails = viewArtworkDetails;
-window.getImageUrl = getImageUrl;
-window.showToast = showToast;
-window.showArtworkDetail = showArtworkDetail;
 window.openResellModal = openResellModal;
+window.resellArtwork = resellArtwork;
+window.loadUserPurchasesLive = loadUserPurchasesLive;
+window.loadUserArtworksLive = loadUserArtworksLive;
+window.hideLoading = hideLoading;
+window.buyArtworkFromModal = buyArtworkFromModal;
+window.showBlockchainDetails = showBlockchainDetails;
+window.closeBlockchainModal = closeBlockchainModal;
 
-console.log("✅ Modal handlers initialized");
 
-console.log("✅ Core functions loaded and exposed globally");
+
+// Make sure all functions are defined above this line
+document.addEventListener("DOMContentLoaded", () => {
+  Object.assign(window, {
+    connectWallet,
+    disconnectWallet,
+    toggleCart,
+    addToCart,
+    removeFromCart,
+    clearCart,
+    checkout,
+    showSection,
+    loadArtworksLive,
+    filterArtworks,
+    submitArtwork,
+    approveAllArtworks,
+    viewReports,
+    exportData,
+    viewAllUsers,
+    viewTransactions,
+    enableUsernameEdit,
+    saveUsername,
+    enableBioEdit,
+    saveBio,
+    showArtworkDetail,
+    closeArtworkModal,
+    showArtistProfile,
+    closeResellModal,
+    confirmResell,
+    closeBlockchainModal,
+    closeDetailsModal,
+    viewArtworkDetails,
+    openResellModal,
+    resellArtwork,
+    loadUserPurchasesLive,
+    loadUserArtworksLive,
+    hideLoading,
+    buyArtworkFromModal,
+    showBlockchainDetails,
+    closeBlockchainModal,
+    submitArtworkReview,
+    loadArtworkReviews,
+  });
+});
