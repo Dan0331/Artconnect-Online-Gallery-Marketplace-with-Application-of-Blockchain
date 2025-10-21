@@ -1784,6 +1784,7 @@ body {
   margin-bottom: 1rem;
 }
 /* ⭐ Star Rating */
+/*
 .star-rating {
   display: flex;
   gap: 0.5rem;
@@ -1806,6 +1807,7 @@ body {
 }
 
 /* Review Section Spacing */
+/*
 .reviews-section {
   margin-top: 2rem;
   border-top: 1px solid #e2e8f0;
@@ -1813,6 +1815,7 @@ body {
 }
 
 /* ⭐ Average Rating Display */
+/*
 #averageRatingContainer {
   margin: 0.5rem 0 1rem;
   font-size: 1rem;
@@ -1827,8 +1830,9 @@ body {
   border-radius: 10px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   color: #1a202c;
-}
-*/
+} */
+
+
 
 
 
