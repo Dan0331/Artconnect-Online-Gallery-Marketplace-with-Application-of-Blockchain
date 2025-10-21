@@ -2767,31 +2767,40 @@ function loadArtworkReviews(artworkId) {
   const q = query(reviewsRef, where("artworkId", "==", artworkId));
 
   onSnapshot(q, (snapshot) => {
+    const avgContainer = document.getElementById("averageRatingContainer");
+    if (!avgContainer) return;
+
     if (snapshot.empty) {
       reviewList.innerHTML = '<p>No reviews yet. Be the first to write one!</p>';
-      document.getElementById("averageRatingContainer").innerHTML = `
-        <p class="average-rating-text">⭐ No ratings yet</p>
-      `;
+      avgContainer.innerHTML = `<p class="average-rating-text">⭐ No ratings yet</p>`;
       return;
     }
 
-    // 🔹 Calculate average rating
-    const ratings = snapshot.docs.map(doc => doc.data().rating);
-    const avgRating = (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1);
+    // 🔹 Compute average rating
+    const ratings = snapshot.docs.map(doc => doc.data().rating || 0);
+    const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+    const avgFixed = avg.toFixed(1);
     const reviewCount = snapshot.docs.length;
 
-    // 🔹 Update average rating display
-    document.getElementById("averageRatingContainer").innerHTML = `
-      <p class="average-rating-text">⭐ ${avgRating} / 5 (${reviewCount} Review${reviewCount > 1 ? "s" : ""})</p>
+    // 🔹 Create star display (rounded to nearest whole)
+    const fullStars = Math.round(avg);
+    const starDisplay = "★".repeat(fullStars) + "☆".repeat(5 - fullStars);
+
+    // 🔹 Update average rating section
+    avgContainer.innerHTML = `
+      <p class="average-rating-text">
+        ${starDisplay} ${avgFixed}/5 (${reviewCount} Review${reviewCount > 1 ? "s" : ""})
+      </p>
     `;
 
-    // 🔹 Display each review
+    // 🔹 Display each review below
     const reviewsHTML = snapshot.docs.map(doc => {
       const data = doc.data();
+      const stars = "★".repeat(Math.round(data.rating)) + "☆".repeat(5 - Math.round(data.rating));
       return `
         <div class="review-item">
           <strong>${data.reviewerName || "Anonymous"}</strong>
-          <span>⭐ ${data.rating}/5</span>
+          <span class="star-rating">${stars}</span>
           <p>${data.comment}</p>
           <small>${new Date(data.createdAt).toLocaleString()}</small>
         </div>
@@ -2801,6 +2810,7 @@ function loadArtworkReviews(artworkId) {
     reviewList.innerHTML = reviewsHTML;
   });
 }
+
 
 
 async function submitArtworkReview() {
@@ -2960,6 +2970,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadArtworkReviews,
   });
 });
+
 
 
 
