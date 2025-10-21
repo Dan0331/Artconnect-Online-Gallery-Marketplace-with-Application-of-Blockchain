@@ -34,7 +34,6 @@ let selectedRating = 0;
 let selectedResellArtId = null;
 
 
-
 // 🔹 Global wallet recovery after refresh (respects manual logout)
 window.addEventListener("DOMContentLoaded", async () => {
   // If user intentionally disconnected earlier, don't auto-restore
@@ -705,10 +704,19 @@ function filterArtworks() {
 
 function showArtworkDetail(artworkId) {
   const artwork = [...submittedArtworks].find(item => String(item.id) === String(artworkId));
-  if (!artwork) return;
+  if (!artwork) {
+    console.error("❌ Artwork not found:", artworkId);
+    showToast("Artwork not found", "error");
+    return;
+  }
   
   const modal = document.getElementById('artworkModal');
   const detailContainer = document.getElementById('artworkDetail');
+  
+  if (!modal || !detailContainer) {
+    console.error("❌ Modal elements not found");
+    return;
+  }
 
   // 🖼️ Load artwork info dynamically
   detailContainer.innerHTML = `
@@ -723,18 +731,18 @@ function showArtworkDetail(artworkId) {
           </div>
           <p class="artwork-detail-description">${artwork.description}</p>
           <div class="artwork-status-detail">
-              <span class="status-badge ${getArtworkStatus(artwork.id)}">${getArtworkStatusText(artwork.id)}</span>
+              <span class="status-badge ${artwork.status || 'new'}">${artwork.status === 'resold' ? 'RESOLD' : 'BRAND NEW'}</span>
           </div>
           <div class="artwork-detail-footer">
               <span class="artwork-detail-price">${artwork.price} tETH</span>
               <div class="detail-actions">
-                  <button class="btn btn-secondary" onclick="showArtistProfile('${(artwork.sellerId||'').toLowerCase()}')">
+                  <button class="btn btn-secondary" onclick="showArtistProfile('${(artwork.sellerId || '').toLowerCase()}')">
                       <i class="fas fa-user"></i> View Artist
                   </button>
                   <button class="btn btn-secondary blockchain-btn" data-id="${artwork.id}">
                     <i class="fab fa-ethereum"></i> History
                   </button>
-                  <button class="btn btn-primary enhanced-add-btn" onclick="addToCart(${artwork.id}); closeArtworkModal();" ${!artwork.inStock ? 'disabled' : ''}>
+                  <button class="btn btn-primary enhanced-add-btn" onclick="addToCart('${artwork.id}'); closeArtworkModal();" ${!artwork.inStock ? 'disabled' : ''}>
                       <i class="fas fa-shopping-basket"></i> ${artwork.inStock ? 'Add to Basket' : 'Out of Stock'}
                   </button>
               </div>
@@ -742,6 +750,7 @@ function showArtworkDetail(artworkId) {
       </div>
   `;
 
+  // Setup blockchain button
   const blockchainBtn = detailContainer.querySelector(".blockchain-btn");
   if (blockchainBtn) {
     blockchainBtn.addEventListener("click", (e) => {
@@ -750,15 +759,11 @@ function showArtworkDetail(artworkId) {
     });
   }
 
+  // ✅ SHOW MODAL
   modal.style.display = 'block';
 
-  // ⭐ NEW LINE: Load artwork reviews after modal opens
-try {
+  // ⭐ Load artwork reviews
   loadArtworkReviews(artwork.title);
-} catch (err) {
-  console.warn("Review loading failed:", err);
-}
-
 }
 
 
@@ -2452,11 +2457,18 @@ function renderArtworkCard(art) {
 
 let selectedResellArtId = null;
 
+// ============================================
+// 🔧 OPEN RESELL MODAL
+// ============================================
 function openResellModal(artId, artTitle, currentPrice = 0) {
     selectedResellArtId = artId;
     document.getElementById("resellArtTitle").textContent = `Reselling: ${artTitle}`;
-    document.getElementById("resellPrice").value = currentPrice || 0.001; // Auto-fill current price
-    document.getElementById("resellModal").style.display = "flex";
+    document.getElementById("resellPrice").value = currentPrice || 0.001;
+    
+    const modal = document.getElementById("resellModal");
+    if (modal) {
+        modal.style.display = "flex";
+    }
 }
 
 // Close modal
@@ -2786,65 +2798,79 @@ function closeBlockchainModal() {
 // 🟣 ARTWORK REVIEW SYSTEM
 // ==========================
 
-// 🔹 Load reviews for a specific artwork
-function loadArtworkReviews(artworkId) {
+async function loadArtworkReviews(artworkId) {
+  console.log("📝 Loading reviews for:", artworkId);
+  
   const reviewList = document.getElementById('reviewList');
-  if (!reviewList) return;
+  const avgContainer = document.getElementById('averageRatingContainer');
+  
+  if (!reviewList) {
+    console.warn("⚠️ reviewList element not found");
+    return;
+  }
 
   reviewList.innerHTML = '<p>Loading reviews...</p>';
 
-  const reviewsRef = collection(db, "reviews_artworks");
-  const q = query(reviewsRef, where("artworkId", "==", artworkId));
+  try {
+    const db = await waitForFirebase();
+    const reviewsRef = collection(db, "reviews_artworks");
+    const q = query(reviewsRef, where("artworkId", "==", artworkId));
 
-  onSnapshot(q, (snapshot) => {
-    const avgContainer = document.getElementById("averageRatingContainer");
-    if (!avgContainer) return;
+    onSnapshot(q, (snapshot) => {
+      if (!avgContainer) return;
 
-    if (snapshot.empty) {
-      reviewList.innerHTML = '<p>No reviews yet. Be the first to write one!</p>';
-      avgContainer.innerHTML = `<p class="average-rating-text">⭐ No ratings yet</p>`;
-      return;
-    }
+      if (snapshot.empty) {
+        reviewList.innerHTML = '<p>No reviews yet. Be the first to write one!</p>';
+        avgContainer.innerHTML = `<p class="average-rating-text">⭐ No ratings yet</p>`;
+        return;
+      }
 
-    // 🔹 Compute average rating
-    const ratings = snapshot.docs.map(doc => doc.data().rating || 0);
-    const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
-    const avgFixed = avg.toFixed(1);
-    const reviewCount = snapshot.docs.length;
+      // Calculate average rating
+      const ratings = snapshot.docs.map(doc => doc.data().rating || 0);
+      const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+      const avgFixed = avg.toFixed(1);
+      const reviewCount = snapshot.docs.length;
 
-    // 🔹 Create star display (rounded to nearest whole)
-    const fullStars = Math.round(avg);
-    const starDisplay = "★".repeat(fullStars) + "☆".repeat(5 - fullStars);
+      // Create star display
+      const fullStars = Math.round(avg);
+      const starDisplay = "★".repeat(fullStars) + "☆".repeat(5 - fullStars);
 
-    // 🔹 Update average rating section
-    avgContainer.innerHTML = `
-      <p class="average-rating-text">
-        ${starDisplay} ${avgFixed}/5 (${reviewCount} Review${reviewCount > 1 ? "s" : ""})
-      </p>
-    `;
-
-    // 🔹 Display each review below
-    const reviewsHTML = snapshot.docs.map(doc => {
-      const data = doc.data();
-      const stars = "★".repeat(Math.round(data.rating)) + "☆".repeat(5 - Math.round(data.rating));
-      return `
-        <div class="review-item">
-          <strong>${data.reviewerName || "Anonymous"}</strong>
-          <span class="star-rating">${stars}</span>
-          <p>${data.comment}</p>
-          <small>${new Date(data.createdAt).toLocaleString()}</small>
-        </div>
+      // Update average rating section
+      avgContainer.innerHTML = `
+        <p class="average-rating-text">
+          ${starDisplay} ${avgFixed}/5 (${reviewCount} Review${reviewCount > 1 ? "s" : ""})
+        </p>
       `;
-    }).join('');
 
-    reviewList.innerHTML = reviewsHTML;
-  });
+      // Display each review
+      const reviewsHTML = snapshot.docs.map(doc => {
+        const data = doc.data();
+        const stars = "★".repeat(Math.round(data.rating)) + "☆".repeat(5 - Math.round(data.rating));
+        return `
+          <div class="review-item">
+            <strong>${data.reviewerName || "Anonymous"}</strong>
+            <span class="star-rating">${stars}</span>
+            <p>${data.comment}</p>
+            <small>${new Date(data.createdAt).toLocaleString()}</small>
+          </div>
+        `;
+      }).join('');
+
+      reviewList.innerHTML = reviewsHTML;
+    });
+  } catch (err) {
+    console.error("Error loading reviews:", err);
+    reviewList.innerHTML = '<p style="color:red;">Failed to load reviews</p>';
+  }
 }
 
 
 
+// ============================================
+// 🔧 SUBMIT ARTWORK REVIEW
+// ============================================
 async function submitArtworkReview() {
-  const comment = document.getElementById("reviewComment").value.trim();
+  const comment = document.getElementById("reviewComment")?.value.trim();
   const artworkTitle = document.querySelector(".artwork-detail-info h2")?.textContent;
 
   if (!walletConnected || !walletAddress) {
@@ -2852,12 +2878,19 @@ async function submitArtworkReview() {
     return;
   }
 
-  if (selectedRating === 0) {
+  if (!selectedRating || selectedRating === 0) {
     showToast("Please select a star rating", "error");
     return;
   }
 
+  if (!comment) {
+    showToast("Please write a comment", "error");
+    return;
+  }
+
   try {
+    const db = await waitForFirebase();
+    
     await addDoc(collection(db, "reviews_artworks"), {
       artworkId: artworkTitle,
       reviewerId: walletAddress,
@@ -2868,38 +2901,21 @@ async function submitArtworkReview() {
     });
 
     showToast("Review added successfully!", "success");
+    
+    // Reset form
     document.getElementById("reviewComment").value = "";
     selectedRating = 0;
     updateStarDisplay(0);
+    
   } catch (err) {
     console.error("Error adding review:", err);
     showToast("Failed to add review", "error");
   }
 }
-// 🟡 Interactive Star Rating
-let selectedRating = 0;
 
-document.addEventListener("DOMContentLoaded", () => {
-  const stars = document.querySelectorAll("#starRating i");
-  if (!stars.length) return;
-
-  stars.forEach(star => {
-    star.addEventListener("click", () => {
-      selectedRating = parseInt(star.getAttribute("data-value"));
-      updateStarDisplay(selectedRating);
-    });
-
-    star.addEventListener("mouseover", () => {
-      const hoverValue = parseInt(star.getAttribute("data-value"));
-      updateStarDisplay(hoverValue);
-    });
-
-    star.addEventListener("mouseleave", () => {
-      updateStarDisplay(selectedRating);
-    });
-  });
-});
-
+// ============================================
+// 🔧 STAR RATING DISPLAY
+// ============================================
 function updateStarDisplay(value) {
   const stars = document.querySelectorAll("#starRating i");
   stars.forEach(star => {
@@ -2911,6 +2927,39 @@ function updateStarDisplay(value) {
       star.classList.remove("fa-solid", "star-active");
       star.classList.add("fa-regular");
     }
+  });
+}
+
+// ============================================
+// 🔧 INITIALIZE STAR RATING SYSTEM
+// ============================================
+function initializeStarRating() {
+  console.log("⭐ Initializing star rating system");
+  
+  const stars = document.querySelectorAll("#starRating i");
+  if (!stars.length) {
+    console.warn("⚠️ Star rating elements not found");
+    return;
+  }
+
+  stars.forEach(star => {
+    // Click to select rating
+    star.addEventListener("click", function() {
+      selectedRating = parseInt(this.getAttribute("data-value"));
+      updateStarDisplay(selectedRating);
+      console.log("Selected rating:", selectedRating);
+    });
+
+    // Hover effect
+    star.addEventListener("mouseover", function() {
+      const hoverValue = parseInt(this.getAttribute("data-value"));
+      updateStarDisplay(hoverValue);
+    });
+
+    // Reset on mouse leave
+    star.addEventListener("mouseleave", function() {
+      updateStarDisplay(selectedRating);
+    });
   });
 }
 // script.js
@@ -2929,8 +2978,13 @@ window.showArtistProfile = showArtistProfile;
 window.viewArtworkDetails = viewArtworkDetails;
 window.getImageUrl = getImageUrl;
 window.showToast = showToast;
+window.showArtworkDetail = showArtworkDetail;
+window.openResellModal = openResellModal;
+
+console.log("✅ Modal handlers initialized");
 
 console.log("✅ Core functions loaded and exposed globally");
+
 
 
 
