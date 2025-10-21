@@ -584,6 +584,9 @@ async function loadArtworksLive() {
   }
 }
 
+// ============================================
+// 🔧 IMAGE URL HELPER (FIXED)
+// ============================================
 function getImageUrl(url) {
     if (!url) return '';
     if (url.includes("drive.google.com")) {
@@ -593,6 +596,7 @@ function getImageUrl(url) {
         }
     }
     return url;
+} // ✅ FIXED: Added missing closing brace
 
 function renderArtworks(artworks) {
     const artworkGrid = document.getElementById('artworkGrid');
@@ -2962,6 +2966,49 @@ function initializeStarRating() {
     });
   });
 }
+document.addEventListener('DOMContentLoaded', function() {
+  console.log("✅ Initializing modal handlers and review system");
+  initializeStarRating();
+  
+  // Setup modal close handlers
+  const modals = [
+    'cartModal', 'artworkModal', 'blockchainModal', 
+    'artistModal', 'artDetailsModal', 'resellModal'
+  ];
+  
+  modals.forEach(id => {
+    const modal = document.getElementById(id);
+    if (!modal) return;
+    
+    modal.addEventListener('click', function(event) {
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+    
+    const closeBtn = modal.querySelector('.close-btn, .modal-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        modal.style.display = 'none';
+      });
+    }
+  });
+  
+  // ESC key to close modals
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      modals.forEach(id => {
+        const modal = document.getElementById(id);
+        if (modal && (modal.style.display === 'block' || modal.style.display === 'flex')) {
+          modal.style.display = 'none';
+        }
+      });
+    }
+  });
+});
+
+console.log("✅ Core functions loaded and exposed globally");
 // script.js
 // ============================================
 // 🌍 EXPOSE ALL FUNCTIONS GLOBALLY
@@ -2984,3 +3031,4 @@ window.openResellModal = openResellModal;
 console.log("✅ Modal handlers initialized");
 
 console.log("✅ Core functions loaded and exposed globally");
+
