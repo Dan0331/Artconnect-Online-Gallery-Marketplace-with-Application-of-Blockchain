@@ -978,9 +978,13 @@ async function checkout() {
     return;
   }
 
+  // Show the overlay and let the browser render it before heavy work
   showLoading();
   showLoadingText("Preparing your transactions...");
   showToast('Processing payment...', 'warning');
+
+  // Wait a tiny bit to allow the overlay to render visually
+  await new Promise((resolve) => setTimeout(resolve, 100));
 
   try {
     let successfulPurchases = 0;
@@ -2983,6 +2987,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadArtworkReviews,
   });
 });
+
 
 
 
