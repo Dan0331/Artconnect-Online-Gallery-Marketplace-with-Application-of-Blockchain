@@ -3083,9 +3083,54 @@ window.submitArtworkReview = submitArtworkReview;
 window.loadArtworkReviews = loadArtworkReviews;
 
 
+// Make sure all functions are defined above this line
+document.addEventListener("DOMContentLoaded", () => {
+  Object.assign(window, {
+    connectWallet,
+    disconnectWallet,
+    toggleCart,
+    addToCart,
+    removeFromCart,
+    clearCart,
+    checkout,
+    showSection,
+    loadArtworksLive,
+    filterArtworks,
+    submitArtwork,
+    approveAllArtworks,
+    viewReports,
+    exportData,
+    viewAllUsers,
+    viewTransactions,
+    enableUsernameEdit,
+    saveUsername,
+    enableBioEdit,
+    saveBio,
+    showArtworkDetail,
+    closeArtworkModal,
+    showArtistProfile,
+    closeResellModal,
+    confirmResell,
+    closeBlockchainModal,
+    closeDetailsModal,
+    viewArtworkDetails,
+    openResellModal,
+    resellArtwork,
+    loadUserPurchasesLive,
+    loadUserArtworksLive,
+    hideLoading,
+    showBlockchainDetails,
+    closeBlockchainModal,
+    submitArtworkReview,
+    loadArtworkReviews,
+  });
+});
+
+
 console.log("✅ Modal handlers initialized");
 
 console.log("✅ Core functions loaded and exposed globally");
+
 
 
 
