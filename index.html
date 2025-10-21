@@ -593,11 +593,14 @@
     <!-- Toast Notifications -->
     <div class="toast-container" id="toastContainer"></div>
 
-<!-- Loading overlay -->
-<div id="loadingOverlay" class="loading-overlay" style="display: none;">
-  <div class="loading-spinner"></div>
-  <p class="loading-text">Processing your transaction...</p>
+<!-- 🔹 Global Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="loading-content">
+    <div class="spinner"></div>
+    <p class="loading-text">Loading...</p>
+  </div>
 </div>
+
 
     <!-- Firebase Initialization and App Logic -->
    <!-- ✅ Firebase must come before your main script -->
@@ -669,6 +672,7 @@
 
 </body>
 </html>
+
 
 
 
