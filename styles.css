@@ -1811,6 +1811,23 @@ body {
   padding-top: 1.5rem;
 }
 
+/* ⭐ Average Rating Display */
+#averageRatingContainer {
+  margin: 0.5rem 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.average-rating-text {
+  background: #f8fafc;
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  color: #1a202c;
+}
+
 
 
 
