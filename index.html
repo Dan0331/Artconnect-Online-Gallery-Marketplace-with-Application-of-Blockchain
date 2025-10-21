@@ -499,47 +499,60 @@
             </div>
         </div>
     </div>
-
-     <!-- Artwork Detail Modal -->
+<!-- Loading overlay -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+  <div class="loading-spinner"></div>
+  <p class="loading-text">Processing your transaction...</p>
+</div>
+<!-- Artwork Detail Modal -->
 <div class="artwork-modal" id="artworkModal">
   <div class="artwork-content">
-    <button class="close-btn" onclick="closeArtworkModal()">&times;</button>
+    <!-- Close Button -->
+    <button class="close-btn" onclick="closeArtworkModal()" aria-label="Close">&times;</button>
 
-    <!-- Artwork details will be loaded here dynamically -->
+    <!-- Artwork Details (Loaded Dynamically) -->
     <div class="artwork-detail" id="artworkDetail"></div>
 
-  <!-- 🟣 Reviews Section -->
-<div id="reviewsSection" class="reviews-section">
-  <h3>Artwork Reviews</h3>
+    <!-- 🟣 Reviews Section -->
+    <section id="reviewsSection" class="reviews-section">
+      <h3>Artwork Reviews</h3>
 
-  <!-- ⭐ Average Rating Display (Place it right here 👇) -->
-  <div id="averageRatingContainer">
-    <!-- This will be filled automatically by your JS -->
-  </div>
+      <!-- ⭐ Average Rating Display -->
+      <div id="averageRatingContainer">
+        <!-- Filled dynamically by JS -->
+      </div>
 
-  <!-- 👇 Individual Reviews will appear here -->
-  <div id="reviewList">No reviews yet...</div>
+      <!-- 👇 Individual Reviews List -->
+      <div id="reviewList" class="review-list">
+        No reviews yet...
+      </div>
 
-  <!-- 📝 Review Form -->
-  <div id="addReviewForm" class="add-review-form">
-    <h4>Leave a Review</h4>
+      <!-- 📝 Review Form -->
+      <form id="addReviewForm" class="add-review-form" onsubmit="event.preventDefault(); submitArtworkReview();">
+        <h4>Leave a Review</h4>
 
-    <div class="star-rating" id="starRating">
-      <i class="fa-regular fa-star" data-value="1"></i>
-      <i class="fa-regular fa-star" data-value="2"></i>
-      <i class="fa-regular fa-star" data-value="3"></i>
-      <i class="fa-regular fa-star" data-value="4"></i>
-      <i class="fa-regular fa-star" data-value="5"></i>
-    </div>
+        <!-- Star Rating -->
+        <div class="star-rating" id="starRating">
+          <i class="fa-regular fa-star" data-value="1"></i>
+          <i class="fa-regular fa-star" data-value="2"></i>
+          <i class="fa-regular fa-star" data-value="3"></i>
+          <i class="fa-regular fa-star" data-value="4"></i>
+          <i class="fa-regular fa-star" data-value="5"></i>
+        </div>
 
-    <div class="form-group">
-      <label for="reviewComment">Your Comment</label>
-      <textarea id="reviewComment" rows="3" placeholder="Share your thoughts about this artwork..."></textarea>
-    </div>
+        <!-- Comment Textarea -->
+        <div class="form-group">
+          <label for="reviewComment">Your Comment</label>
+          <textarea id="reviewComment" rows="3" placeholder="Share your thoughts about this artwork..."></textarea>
+        </div>
 
-    <button class="btn btn-primary" onclick="submitArtworkReview()">Submit Review</button>
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary">Submit Review</button>
+      </form>
+    </section>
   </div>
 </div>
+
 
 
     <!-- Artwork Details Modal -->
@@ -591,11 +604,7 @@
     <!-- Toast Notifications -->
     <div class="toast-container" id="toastContainer"></div>
 
-<!-- Loading overlay -->
-<div id="loadingOverlay" class="loading-overlay" style="display: none;">
-  <div class="loading-spinner"></div>
-  <p class="loading-text">Processing your transaction...</p>
-</div>
+
     <!-- Firebase Initialization and App Logic -->
    <!-- ✅ Firebase must come before your main script -->
 <script type="module">
@@ -666,4 +675,5 @@
 
 </body>
 </html>
+
 
