@@ -744,7 +744,12 @@ function showArtworkDetail(artworkId) {
   modal.style.display = 'block';
 
   // ⭐ NEW LINE: Load artwork reviews after modal opens
+try {
   loadArtworkReviews(artwork.title);
+} catch (err) {
+  console.warn("Review loading failed:", err);
+}
+
 }
 
 
@@ -2969,6 +2974,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadArtworkReviews,
   });
 });
+
 
 
 
