@@ -3008,24 +3008,80 @@ console.log("✅ Core functions loaded and exposed globally");
 // ============================================
 // 🌍 EXPOSE ALL FUNCTIONS GLOBALLY
 // ============================================
+// === General UI Functions ===
+window.showSection = showSection;
+window.showToast = showToast;
 window.showLoading = showLoading;
 window.hideLoading = hideLoading;
 window.showLoadingText = showLoadingText;
-window.closeArtworkModal = closeArtworkModal;
-window.closeArtistModal = closeArtistModal;
-window.closeBlockchainModal = closeBlockchainModal;
-window.closeDetailsModal = closeDetailsModal;
-window.closeResellModal = closeResellModal;
-window.showArtistProfile = showArtistProfile;
-window.viewArtworkDetails = viewArtworkDetails;
-window.getImageUrl = getImageUrl;
-window.showToast = showToast;
+
+// === Artwork Modals & Details ===
 window.showArtworkDetail = showArtworkDetail;
+window.viewArtworkDetails = viewArtworkDetails;
+window.closeArtworkModal = closeArtworkModal;
+
+// === Artist Modals ===
+window.showArtistProfile = showArtistProfile;
+window.closeArtistModal = closeArtistModal;
+
+// === Blockchain Modals ===
+window.showBlockchainDetails = showBlockchainDetails;
+window.closeBlockchainModal = closeBlockchainModal;
+
+// === Resell Modals ===
 window.openResellModal = openResellModal;
+window.closeResellModal = closeResellModal;
+window.confirmResell = confirmResell;
+window.resellArtwork = resellArtwork;
+
+// === Details Modal ===
+window.closeDetailsModal = closeDetailsModal;
+
+// === Cart & Checkout ===
+window.toggleCart = toggleCart;
+window.addToCart = addToCart;
+window.removeFromCart = removeFromCart;
+window.clearCart = clearCart;
+window.checkout = checkout;
+window.buyArtworkFromModal = buyArtworkFromModal;
+
+// === Wallet Functions ===
+window.connectWallet = connectWallet;
+window.disconnectWallet = disconnectWallet;
+
+// === Admin / Management ===
+window.loadArtworksLive = loadArtworksLive;
+window.filterArtworks = filterArtworks;
+window.submitArtwork = submitArtwork;
+window.approveAllArtworks = approveAllArtworks;
+window.viewReports = viewReports;
+window.exportData = exportData;
+window.viewAllUsers = viewAllUsers;
+window.viewTransactions = viewTransactions;
+
+// === User Profile ===
+window.enableUsernameEdit = enableUsernameEdit;
+window.saveUsername = saveUsername;
+window.enableBioEdit = enableBioEdit;
+window.saveBio = saveBio;
+
+// === User Artworks & Purchases ===
+window.loadUserPurchasesLive = loadUserPurchasesLive;
+window.loadUserArtworksLive = loadUserArtworksLive;
+
+// === Helper ===
+window.getImageUrl = getImageUrl;
+
+// === Artworkreview ===
+
+window.submitArtworkReview = submitArtworkReview;
+window.loadArtworkReviews = loadArtworkReviews;
+
 
 console.log("✅ Modal handlers initialized");
 
 console.log("✅ Core functions loaded and exposed globally");
+
 
 
 
