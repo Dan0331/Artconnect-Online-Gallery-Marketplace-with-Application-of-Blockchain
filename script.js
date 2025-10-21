@@ -2752,6 +2752,117 @@ function closeBlockchainModal() {
   document.getElementById("blockchainModal").style.display = "none";
 }
 
+// ==========================
+// 🟣 ARTWORK REVIEW SYSTEM
+// ==========================
+import { addDoc, collection, query, where, onSnapshot } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// 🔹 Load reviews for a specific artwork
+function loadArtworkReviews(artworkId) {
+  const reviewList = document.getElementById('reviewList');
+  if (!reviewList) return;
+
+  reviewList.innerHTML = '<p>Loading reviews...</p>';
+
+  const reviewsRef = collection(db, "reviews_artworks");
+  const q = query(reviewsRef, where("artworkId", "==", artworkId));
+
+  onSnapshot(q, (snapshot) => {
+    if (snapshot.empty) {
+      reviewList.innerHTML = '<p>No reviews yet. Be the first to write one!</p>';
+      return;
+    }
+
+    const reviewsHTML = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return `
+        <div class="review-item">
+          <strong>${data.reviewerName || "Anonymous"}</strong>
+          <span>⭐ ${data.rating}/5</span>
+          <p>${data.comment}</p>
+          <small>${new Date(data.createdAt).toLocaleString()}</small>
+        </div>
+      `;
+    }).join('');
+
+    reviewList.innerHTML = reviewsHTML;
+  });
+}
+
+async function submitArtworkReview() {
+  const comment = document.getElementById("reviewComment").value.trim();
+  const artworkTitle = document.querySelector(".artwork-detail-info h2")?.textContent;
+
+  if (!walletConnected || !walletAddress) {
+    showToast("Please connect your wallet to submit a review", "error");
+    return;
+  }
+
+  if (selectedRating === 0) {
+    showToast("Please select a star rating", "error");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "reviews_artworks"), {
+      artworkId: artworkTitle,
+      reviewerId: walletAddress,
+      reviewerName: walletAddress.slice(0, 6) + "..." + walletAddress.slice(-4),
+      rating: selectedRating,
+      comment,
+      createdAt: new Date().toISOString(),
+    });
+
+    showToast("Review added successfully!", "success");
+    document.getElementById("reviewComment").value = "";
+    selectedRating = 0;
+    updateStarDisplay(0);
+  } catch (err) {
+    console.error("Error adding review:", err);
+    showToast("Failed to add review", "error");
+  }
+}
+// 🟡 Interactive Star Rating
+let selectedRating = 0;
+
+document.addEventListener("DOMContentLoaded", () => {
+  const stars = document.querySelectorAll("#starRating i");
+  if (!stars.length) return;
+
+  stars.forEach(star => {
+    star.addEventListener("click", () => {
+      selectedRating = parseInt(star.getAttribute("data-value"));
+      updateStarDisplay(selectedRating);
+    });
+
+    star.addEventListener("mouseover", () => {
+      const hoverValue = parseInt(star.getAttribute("data-value"));
+      updateStarDisplay(hoverValue);
+    });
+
+    star.addEventListener("mouseleave", () => {
+      updateStarDisplay(selectedRating);
+    });
+  });
+});
+
+function updateStarDisplay(value) {
+  const stars = document.querySelectorAll("#starRating i");
+  stars.forEach(star => {
+    const starValue = parseInt(star.getAttribute("data-value"));
+    if (starValue <= value) {
+      star.classList.remove("fa-regular");
+      star.classList.add("fa-solid", "star-active");
+    } else {
+      star.classList.remove("fa-solid", "star-active");
+      star.classList.add("fa-regular");
+    }
+  });
+}
+
+
+
 
 
 
@@ -2838,6 +2949,7 @@ document.addEventListener("DOMContentLoaded", () => {
     closeBlockchainModal,
   });
 });
+
 
 
 
