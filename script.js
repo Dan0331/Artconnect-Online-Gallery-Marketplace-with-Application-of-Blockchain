@@ -2769,9 +2769,23 @@ function loadArtworkReviews(artworkId) {
   onSnapshot(q, (snapshot) => {
     if (snapshot.empty) {
       reviewList.innerHTML = '<p>No reviews yet. Be the first to write one!</p>';
+      document.getElementById("averageRatingContainer").innerHTML = `
+        <p class="average-rating-text">⭐ No ratings yet</p>
+      `;
       return;
     }
 
+    // 🔹 Calculate average rating
+    const ratings = snapshot.docs.map(doc => doc.data().rating);
+    const avgRating = (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1);
+    const reviewCount = snapshot.docs.length;
+
+    // 🔹 Update average rating display
+    document.getElementById("averageRatingContainer").innerHTML = `
+      <p class="average-rating-text">⭐ ${avgRating} / 5 (${reviewCount} Review${reviewCount > 1 ? "s" : ""})</p>
+    `;
+
+    // 🔹 Display each review
     const reviewsHTML = snapshot.docs.map(doc => {
       const data = doc.data();
       return `
@@ -2787,6 +2801,7 @@ function loadArtworkReviews(artworkId) {
     reviewList.innerHTML = reviewsHTML;
   });
 }
+
 
 async function submitArtworkReview() {
   const comment = document.getElementById("reviewComment").value.trim();
@@ -2945,6 +2960,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadArtworkReviews,
   });
 });
+
 
 
 
