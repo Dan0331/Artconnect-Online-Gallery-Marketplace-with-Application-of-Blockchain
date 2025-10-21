@@ -2760,8 +2760,6 @@ function closeBlockchainModal() {
 // 🟣 ARTWORK REVIEW SYSTEM
 // ==========================
 
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
 // 🔹 Load reviews for a specific artwork
 function loadArtworkReviews(artworkId) {
   const reviewList = document.getElementById('reviewList');
@@ -2953,6 +2951,7 @@ document.addEventListener("DOMContentLoaded", () => {
     closeBlockchainModal,
   });
 });
+
 
 
 
