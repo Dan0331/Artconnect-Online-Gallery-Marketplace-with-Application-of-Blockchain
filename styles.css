@@ -1829,7 +1829,7 @@ body {
   color: #1a202c;
 }
 /* 🎨 Artist Modal Styling */
-.artist-modal {
+/*.artist-modal {
   display: none;
   position: fixed;
   z-index: 1001;
@@ -1857,7 +1857,8 @@ body {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
-}
+}*/
+
 
 
 
