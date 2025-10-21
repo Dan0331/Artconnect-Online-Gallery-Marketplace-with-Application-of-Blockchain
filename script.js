@@ -2956,7 +2956,6 @@ document.addEventListener("DOMContentLoaded", () => {
     confirmResell,
     closeBlockchainModal,
     closeDetailsModal,
-    ,
     viewArtworkDetails,
     openResellModal,
     resellArtwork,
@@ -2970,6 +2969,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadArtworkReviews,
   });
 });
+
 
 
 
