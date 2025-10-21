@@ -2907,7 +2907,8 @@ window.loadUserArtworksLive = loadUserArtworksLive;
 window.hideLoading = hideLoading;
 window.buyArtworkFromModal = buyArtworkFromModal;
 window.showBlockchainDetails = showBlockchainDetails;
-window.closeBlockchainModal = closeBlockchainModal
+window.closeBlockchainModal = closeBlockchainModal;
+window.submitArtworkReview = submitArtworkReview;
 
 // Make sure all functions are defined above this line
 document.addEventListener("DOMContentLoaded", () => {
@@ -2949,8 +2950,10 @@ document.addEventListener("DOMContentLoaded", () => {
     buyArtworkFromModal,
     showBlockchainDetails,
     closeBlockchainModal,
+    submitArtworkReview,
   });
 });
+
 
 
 
