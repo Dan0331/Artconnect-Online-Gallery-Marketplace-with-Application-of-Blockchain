@@ -1782,6 +1782,35 @@ body {
 .add-review-form .form-group {
   margin-bottom: 1rem;
 }
+/* ⭐ Star Rating */
+.star-rating {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  color: #d1d5db;
+}
+
+.star-rating i {
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.star-rating i:hover {
+  transform: scale(1.1);
+}
+
+.star-rating .star-active {
+  color: #f6ad55;
+}
+
+/* Review Section Spacing */
+.reviews-section {
+  margin-top: 2rem;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1.5rem;
+}
+
 
 
 
