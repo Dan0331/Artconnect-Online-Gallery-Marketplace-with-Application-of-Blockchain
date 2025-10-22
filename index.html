@@ -591,15 +591,40 @@
         </div>
     </div>
 
-    <!-- Artist Profile Modal -->
-    <div id="artistModal" class="artwork-modal">
-        <div class="artwork-content">
-            <button class="close-btn" onclick="closeArtistModal()">&times;</button>
-            <div class="artist-profile" id="artistProfile">
-                <!-- Artist profile will be loaded here -->
-            </div>
-        </div>
+   <!-- Artist Profile Modal -->
+<div id="artistModal" class="artwork-modal">
+  <div class="artwork-content">
+    <button class="close-btn" onclick="closeArtistModal()">&times;</button>
+
+    <div class="artist-profile" id="artistProfile">
+      <!-- Artist profile will be loaded here -->
     </div>
+
+    <!-- ✅ Add this block right below the artist profile -->
+    <div id="artistRatingSection" class="reviews-section">
+      <h4>Rate this artist</h4>
+
+      <!-- Average Rating -->
+      <div id="artistAverageRatingContainer">
+        <!-- Filled dynamically by JS -->
+      </div>
+
+      <!-- Star Rating (no comment) -->
+      <div class="star-rating" id="artistStarRating">
+        <i class="fa-regular fa-star" data-value="1"></i>
+        <i class="fa-regular fa-star" data-value="2"></i>
+        <i class="fa-regular fa-star" data-value="3"></i>
+        <i class="fa-regular fa-star" data-value="4"></i>
+        <i class="fa-regular fa-star" data-value="5"></i>
+      </div>
+
+      <!-- Submit button -->
+      <button id="submitArtistRatingBtn" class="btn btn-primary">Submit Rating</button>
+    </div>
+    <!-- ✅ end -->
+  </div>
+</div>
+
 
     <!-- Toast Notifications -->
     <div class="toast-container" id="toastContainer"></div>
@@ -675,5 +700,6 @@
 
 </body>
 </html>
+
 
 
