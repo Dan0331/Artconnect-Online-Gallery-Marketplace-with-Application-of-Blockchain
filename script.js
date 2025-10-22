@@ -1882,7 +1882,7 @@ function viewTransactions() {
 
 
 let currentUser = null;
-const USERNAME_COOLDOWN = 60; //60 * 24 * 60 * 60 * 1000; // 60 days
+const USERNAME_COOLDOWN = 60 * 24 * 60 * 60 * 1000; //60 * 24 * 60 * 60 * 1000; // 60 days
 
 async function loadUserProfileFromDB(walletAddr) {
     if (!walletAddr) {
@@ -3132,6 +3132,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadArtworkReviews,
   });
 });
+
 
 
 
