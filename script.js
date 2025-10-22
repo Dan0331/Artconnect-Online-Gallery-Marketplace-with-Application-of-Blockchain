@@ -1645,7 +1645,7 @@ async function showArtistProfile(walletAddr) {
 
             return `
               <div class="portfolio-item" style="cursor:pointer;"
-                  onclick="(); showArtworkDetail('${artId}');">
+                  onclick="showArtworkDetail('${artId}');">
                 <img src="${imageUrl}" alt="${title}" loading="lazy"
                     style="width:160px; height:110px; object-fit:cover; border-radius:8px;">
                 <div class="portfolio-item-meta" style="margin-top:6px; text-align:left;">
@@ -1676,12 +1676,34 @@ async function showArtistProfile(walletAddr) {
 
         <p class="artist-bio" style="color:#374151; margin-bottom:1rem;">${bio}</p>
 
+        <!-- ⭐ Added for rating -->
+        <div id="artistRatingSection" class="reviews-section" style="margin-bottom:1.5rem;">
+          <h4>Rate this artist</h4>
+          <div id="artistAverageRatingContainer"></div>
+          <div class="star-rating" id="artistStarRating">
+            <i class="fa-regular fa-star" data-value="1"></i>
+            <i class="fa-regular fa-star" data-value="2"></i>
+            <i class="fa-regular fa-star" data-value="3"></i>
+            <i class="fa-regular fa-star" data-value="4"></i>
+            <i class="fa-regular fa-star" data-value="5"></i>
+          </div>
+          <button id="submitArtistRatingBtn" class="btn btn-primary" style="margin-top:0.5rem;">Submit Rating</button>
+        </div>
+        <!-- ⭐ End of rating section -->
+
         <h3 style="margin:0 0 0.5rem;">Portfolio</h3>
         <div class="artist-portfolio-grid" style="display:flex; gap:1rem; flex-wrap:wrap;">
           ${artworksHTML}
         </div>
       </div>
     `;
+
+    // ⭐ Initialize rating logic after HTML renders
+    initArtistStarHandlers();
+    loadArtistRatings(walletAddr);
+    const btn = document.getElementById("submitArtistRatingBtn");
+    if (btn) btn.addEventListener("click", () => submitArtistRating(walletAddr));
+
   } catch (error) {
     console.error("❌ Error loading artist profile:", error);
     profileContainer.innerHTML = `
@@ -3102,4 +3124,5 @@ document.addEventListener("DOMContentLoaded", () => {
     loadArtworkReviews,
   });
 });
+
 
