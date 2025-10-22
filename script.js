@@ -19,6 +19,7 @@ import {
   runTransaction,
   addDoc, 
   query, 
+  updateDoc,
   where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -3003,33 +3004,39 @@ async function submitArtistRating(artistId) {
 
   try {
     const reviewsRef = collection(db, "reviews_artists");
-    // Prevent duplicate: check if this reviewer already rated this artist
-    const existingQuery = query(reviewsRef,
-                                where("artistId", "==", artistId),
-                                where("reviewerId", "==", window.walletAddress));
+
+    // Check if this reviewer already rated this artist
+    const existingQuery = query(
+      reviewsRef,
+      where("artistId", "==", artistId),
+      where("reviewerId", "==", window.walletAddress)
+    );
     const existingSnapshot = await getDocs(existingQuery);
 
     if (!existingSnapshot.empty) {
-      // update the first document (you might want to handle multiple docs more carefully)
+      // ⭐ User already rated — update the rating
       const docRefToUpdate = existingSnapshot.docs[0].ref;
-      await docRefToUpdate.update({
+      await updateDoc(docRefToUpdate, {
         rating: selectedArtistRating,
         updatedAt: new Date().toISOString()
       });
-      showToast("Artist rating updated!", "success");
+      showToast("Your rating has been updated!", "success");
     } else {
-      // add new rating
+      // ⭐ New rating — add new document
       await addDoc(reviewsRef, {
         artistId,
         reviewerId: window.walletAddress,
-        reviewerName: (window.walletAddress || "").slice(0,6) + "." + (window.walletAddress || "").slice(-4),
+        reviewerName:
+          (window.walletAddress || "").slice(0, 6) +
+          "..." +
+          (window.walletAddress || "").slice(-4),
         rating: selectedArtistRating,
         createdAt: new Date().toISOString()
       });
       showToast("Artist rated — thank you!", "success");
     }
 
-    // reset selection UI
+    // Reset the star UI
     selectedArtistRating = 0;
     updateArtistStarDisplay(0);
   } catch (err) {
@@ -3037,6 +3044,7 @@ async function submitArtistRating(artistId) {
     showToast("Failed to submit rating", "error");
   }
 }
+
 
 // script.js
 window.submitArtworkReview = submitArtworkReview;
@@ -3124,5 +3132,6 @@ document.addEventListener("DOMContentLoaded", () => {
     loadArtworkReviews,
   });
 });
+
 
 
