@@ -8,6 +8,7 @@ let isAdmin = false;
 const USER_DISCONNECTED_KEY = 'walletDisconnectedByUser';
 let unsubscribeArtworks = null;
 let unsubscribePurchases = null;
+let selectedArtistRating = 0;
 import { 
   collection, 
   onSnapshot, 
@@ -2883,6 +2884,138 @@ function updateStarDisplay(value) {
     }
   });
 }
+
+// ============================
+// Artist rating (star-only)
+// ============================
+
+
+// Initialize artist star handlers (call this once or when artist modal opens)
+function initArtistStarHandlers() {
+  const stars = document.querySelectorAll("#artistStarRating i");
+  if (!stars || stars.length === 0) return;
+
+  stars.forEach(star => {
+    star.addEventListener("click", () => {
+      selectedArtistRating = parseInt(star.getAttribute("data-value"));
+      updateArtistStarDisplay(selectedArtistRating);
+    });
+    star.addEventListener("mouseover", () => {
+      const hoverValue = parseInt(star.getAttribute("data-value"));
+      updateArtistStarDisplay(hoverValue);
+    });
+    star.addEventListener("mouseleave", () => {
+      updateArtistStarDisplay(selectedArtistRating);
+    });
+  });
+}
+
+function updateArtistStarDisplay(value) {
+  const stars = document.querySelectorAll("#artistStarRating i");
+  stars.forEach(star => {
+    const starValue = parseInt(star.getAttribute("data-value"));
+    if (starValue <= value) {
+      star.classList.remove("fa-regular");
+      star.classList.add("fa-solid", "star-active");
+    } else {
+      star.classList.remove("fa-solid", "star-active");
+      star.classList.add("fa-regular");
+    }
+  });
+}
+
+/**
+ * Load artist ratings and compute average
+ * @param {string} artistId - the artist's wallet address (or unique id you use)
+ */
+function loadArtistRatings(artistId) {
+  const avgContainer = document.getElementById("artistAverageRatingContainer");
+  if (!avgContainer) return;
+
+  avgContainer.innerHTML = '<p>Loading rating...</p>';
+
+  const reviewsRef = collection(db, "reviews_artists");
+  const q = query(reviewsRef, where("artistId", "==", artistId));
+
+  onSnapshot(q, (snapshot) => {
+    if (snapshot.empty) {
+      avgContainer.innerHTML = `<p class="average-rating-text">⭐ No ratings yet</p>`;
+      return;
+    }
+
+    const ratings = snapshot.docs.map(doc => doc.data().rating || 0);
+    const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+    const avgFixed = avg.toFixed(1);
+    const reviewCount = snapshot.docs.length;
+    const fullStars = Math.round(avg);
+    const starDisplay = "★".repeat(fullStars) + "☆".repeat(5 - fullStars);
+
+    avgContainer.innerHTML = `
+      <p class="average-rating-text">${starDisplay} ${avgFixed}/5 (${reviewCount} Rating${reviewCount > 1 ? "s" : ""})</p>
+    `;
+  }, (err) => {
+    console.error("Error loading artist ratings:", err);
+    avgContainer.innerHTML = `<p style="color:red;">Failed to load ratings.</p>`;
+  });
+}
+
+/**
+ * Submit or update artist rating (no comment)
+ * @param {string} artistId
+ */
+async function submitArtistRating(artistId) {
+  if (!window.walletConnected || !window.walletAddress) {
+    showToast("Please connect your wallet to submit a rating", "error");
+    return;
+  }
+
+  if (!artistId) {
+    showToast("Artist ID missing", "error");
+    return;
+  }
+
+  if (!selectedArtistRating || selectedArtistRating === 0) {
+    showToast("Please select a star rating", "error");
+    return;
+  }
+
+  try {
+    const reviewsRef = collection(db, "reviews_artists");
+    // Prevent duplicate: check if this reviewer already rated this artist
+    const existingQuery = query(reviewsRef,
+                                where("artistId", "==", artistId),
+                                where("reviewerId", "==", window.walletAddress));
+    const existingSnapshot = await getDocs(existingQuery);
+
+    if (!existingSnapshot.empty) {
+      // update the first document (you might want to handle multiple docs more carefully)
+      const docRefToUpdate = existingSnapshot.docs[0].ref;
+      await docRefToUpdate.update({
+        rating: selectedArtistRating,
+        updatedAt: new Date().toISOString()
+      });
+      showToast("Artist rating updated!", "success");
+    } else {
+      // add new rating
+      await addDoc(reviewsRef, {
+        artistId,
+        reviewerId: window.walletAddress,
+        reviewerName: (window.walletAddress || "").slice(0,6) + "." + (window.walletAddress || "").slice(-4),
+        rating: selectedArtistRating,
+        createdAt: new Date().toISOString()
+      });
+      showToast("Artist rated — thank you!", "success");
+    }
+
+    // reset selection UI
+    selectedArtistRating = 0;
+    updateArtistStarDisplay(0);
+  } catch (err) {
+    console.error("Error adding/updating artist rating:", err);
+    showToast("Failed to submit rating", "error");
+  }
+}
+
 // script.js
 window.submitArtworkReview = submitArtworkReview;
 window.loadArtworkReviews = loadArtworkReviews;
@@ -2969,3 +3102,4 @@ document.addEventListener("DOMContentLoaded", () => {
     loadArtworkReviews,
   });
 });
+
