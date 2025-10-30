@@ -2837,6 +2837,7 @@ function loadArtworkReviews(artworkId) {
 
 
 
+// 🟢 Submit or Update Artwork Review
 async function submitArtworkReview() {
   const comment = document.getElementById("reviewComment").value.trim();
   const artworkTitle = document.querySelector(".artwork-detail-info h2")?.textContent;
@@ -2862,7 +2863,7 @@ async function submitArtworkReview() {
     const existing = await getDocs(q);
 
     if (!existing.empty) {
-      // 🟡 Update existing review
+      // 🟡 If review exists → Update it
       const reviewDoc = existing.docs[0];
       await updateDoc(reviewDoc.ref, {
         rating: selectedRating,
@@ -2872,7 +2873,7 @@ async function submitArtworkReview() {
 
       showToast("Your review has been updated!", "success");
     } else {
-      // 🟢 Create new review
+      // 🟢 If no review → Add a new one
       await addDoc(reviewsRef, {
         artworkId: artworkTitle,
         reviewerId: walletAddress,
@@ -2885,10 +2886,10 @@ async function submitArtworkReview() {
       showToast("Review added successfully!", "success");
     }
 
-    // 🧹 Reset form + stars
+    // 🧹 Reset input and star UI after submission
     document.getElementById("reviewComment").value = "";
     selectedRating = 0;
-    updateStarDisplay(selectedRating);
+    updateStarDisplay(0);
 
   } catch (err) {
     console.error("Error adding/updating review:", err);
@@ -2896,7 +2897,31 @@ async function submitArtworkReview() {
   }
 }
 
+// 🟡 Interactive Star Rating
+let selectedRating = 0;
 
+document.addEventListener("DOMContentLoaded", () => {
+  const stars = document.querySelectorAll("#starRating i");
+  if (!stars.length) return;
+
+  stars.forEach(star => {
+    star.addEventListener("click", () => {
+      selectedRating = parseInt(star.getAttribute("data-value"));
+      updateStarDisplay(selectedRating);
+    });
+
+    star.addEventListener("mouseover", () => {
+      const hoverValue = parseInt(star.getAttribute("data-value"));
+      updateStarDisplay(hoverValue);
+    });
+
+    star.addEventListener("mouseleave", () => {
+      updateStarDisplay(selectedRating);
+    });
+  });
+});
+
+// 🟣 Star Display Update Function
 function updateStarDisplay(value) {
   const stars = document.querySelectorAll("#starRating i");
   stars.forEach(star => {
