@@ -2852,47 +2852,49 @@ async function submitArtworkReview() {
   }
 
   try {
-    await addDoc(collection(db, "reviews_artworks"), {
-      artworkId: artworkTitle,
-      reviewerId: walletAddress,
-      reviewerName: walletAddress.slice(0, 6) + "..." + walletAddress.slice(-4),
-      rating: selectedRating,
-      comment,
-      createdAt: new Date().toISOString(),
-    });
+    const reviewsRef = collection(db, "reviews_artworks");
+    const q = query(
+      reviewsRef,
+      where("artworkId", "==", artworkTitle),
+      where("reviewerId", "==", walletAddress)
+    );
 
-    showToast("Review added successfully!", "success");
+    const existing = await getDocs(q);
+
+    if (!existing.empty) {
+      // 🟡 Update existing review
+      const reviewDoc = existing.docs[0];
+      await updateDoc(reviewDoc.ref, {
+        rating: selectedRating,
+        comment: comment,
+        updatedAt: new Date().toISOString(),
+      });
+
+      showToast("Your review has been updated!", "success");
+    } else {
+      // 🟢 Create new review
+      await addDoc(reviewsRef, {
+        artworkId: artworkTitle,
+        reviewerId: walletAddress,
+        reviewerName: walletAddress.slice(0, 6) + "..." + walletAddress.slice(-4),
+        rating: selectedRating,
+        comment,
+        createdAt: new Date().toISOString(),
+      });
+
+      showToast("Review added successfully!", "success");
+    }
+
+    // 🔹 Reset review input
     document.getElementById("reviewComment").value = "";
     selectedRating = 0;
     updateStarDisplay(0);
+
   } catch (err) {
-    console.error("Error adding review:", err);
-    showToast("Failed to add review", "error");
+    console.error("Error adding/updating review:", err);
+    showToast("Failed to submit review", "error");
   }
 }
-// 🟡 Interactive Star Rating
-let selectedRating = 0;
-
-document.addEventListener("DOMContentLoaded", () => {
-  const stars = document.querySelectorAll("#starRating i");
-  if (!stars.length) return;
-
-  stars.forEach(star => {
-    star.addEventListener("click", () => {
-      selectedRating = parseInt(star.getAttribute("data-value"));
-      updateStarDisplay(selectedRating);
-    });
-
-    star.addEventListener("mouseover", () => {
-      const hoverValue = parseInt(star.getAttribute("data-value"));
-      updateStarDisplay(hoverValue);
-    });
-
-    star.addEventListener("mouseleave", () => {
-      updateStarDisplay(selectedRating);
-    });
-  });
-});
 
 function updateStarDisplay(value) {
   const stars = document.querySelectorAll("#starRating i");
@@ -3132,6 +3134,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadArtworkReviews,
   });
 });
+
 
 
 
