@@ -2885,16 +2885,17 @@ async function submitArtworkReview() {
       showToast("Review added successfully!", "success");
     }
 
-    // 🔹 Reset review input
+    // 🧹 Reset form + stars
     document.getElementById("reviewComment").value = "";
     selectedRating = 0;
-    updateStarDisplay(0);
+    updateStarDisplay(selectedRating);
 
   } catch (err) {
     console.error("Error adding/updating review:", err);
     showToast("Failed to submit review", "error");
   }
 }
+
 
 function updateStarDisplay(value) {
   const stars = document.querySelectorAll("#starRating i");
@@ -3134,6 +3135,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadArtworkReviews,
   });
 });
+
 
 
 
