@@ -9,6 +9,107 @@ const USER_DISCONNECTED_KEY = 'walletDisconnectedByUser';
 let unsubscribeArtworks = null;
 let unsubscribePurchases = null;
 let selectedArtistRating = 0;
+// 🔹 Declare globally so all functions can access it
+let selectedRating = 0;
+
+// 🔸 Review submission function
+async function submitArtworkReview() {
+  const commentInput = document.getElementById("reviewComment");
+  const comment = commentInput.value.trim();
+  const artworkTitle = document.querySelector(".artwork-detail-info h2")?.textContent;
+
+  if (!walletConnected || !walletAddress) {
+    showToast("Please connect your wallet to submit a review", "error");
+    return;
+  }
+
+  if (selectedRating === 0) {
+    showToast("Please select a star rating", "error");
+    return;
+  }
+
+  try {
+    const reviewsRef = collection(db, "reviews_artworks");
+    const q = query(
+      reviewsRef,
+      where("artworkId", "==", artworkTitle),
+      where("reviewerId", "==", walletAddress)
+    );
+
+    const existing = await getDocs(q);
+    if (!existing.empty) {
+      showToast("You already submitted a review for this artwork.", "error");
+      lockReviewUI();
+      return;
+    }
+
+    await addDoc(reviewsRef, {
+      artworkId: artworkTitle,
+      reviewerId: walletAddress,
+      reviewerName: walletAddress.slice(0, 6) + "..." + walletAddress.slice(-4),
+      rating: selectedRating,
+      comment,
+      createdAt: new Date().toISOString(),
+    });
+
+    showToast("Review added successfully!", "success");
+    lockReviewUI();
+  } catch (err) {
+    console.error("Error submitting review:", err);
+    showToast("Failed to submit review", "error");
+  }
+}
+
+// 🔹 Star-rating logic
+document.addEventListener("DOMContentLoaded", () => {
+  const stars = document.querySelectorAll("#starRating i");
+  if (!stars.length) return;
+
+  stars.forEach(star => {
+    star.addEventListener("click", () => {
+      selectedRating = parseInt(star.getAttribute("data-value"));
+      updateStarDisplay(selectedRating);
+    });
+
+    star.addEventListener("mouseover", () => {
+      const hoverValue = parseInt(star.getAttribute("data-value"));
+      updateStarDisplay(hoverValue);
+    });
+
+    star.addEventListener("mouseleave", () => {
+      updateStarDisplay(selectedRating);
+    });
+  });
+});
+
+function updateStarDisplay(value) {
+  const stars = document.querySelectorAll("#starRating i");
+  stars.forEach(star => {
+    const starValue = parseInt(star.getAttribute("data-value"));
+    if (starValue <= value) {
+      star.classList.remove("fa-regular");
+      star.classList.add("fa-solid", "star-active");
+    } else {
+      star.classList.remove("fa-solid", "star-active");
+      star.classList.add("fa-regular");
+    }
+  });
+}
+
+// 🔹 Lock UI helper
+function lockReviewUI() {
+  const comment = document.getElementById("reviewComment");
+  const submitBtn = document.getElementById("submitReviewBtn");
+  if (comment) comment.disabled = true;
+  if (submitBtn) submitBtn.disabled = true;
+
+  const stars = document.querySelectorAll("#starRating i");
+  stars.forEach(star => {
+    star.style.pointerEvents = "none";
+    star.classList.add("locked-star");
+  });
+}
+
 import { 
   collection, 
   onSnapshot, 
@@ -3146,6 +3247,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadArtworkReviews,
   });
 });
+
 
 
 
