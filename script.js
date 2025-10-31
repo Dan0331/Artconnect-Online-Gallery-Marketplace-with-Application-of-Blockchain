@@ -2837,13 +2837,10 @@ function loadArtworkReviews(artworkId) {
 }
 
 
-// 🔹 Declare globally so all functions can access it
 let selectedRating = 0;
 
-// 🔸 Review submission function
 async function submitArtworkReview() {
-  const commentInput = document.getElementById("reviewComment");
-  const comment = commentInput.value.trim();
+  const comment = document.getElementById("reviewComment").value.trim();
   const artworkTitle = document.querySelector(".artwork-detail-info h2")?.textContent;
 
   if (!walletConnected || !walletAddress) {
@@ -2865,12 +2862,14 @@ async function submitArtworkReview() {
     );
 
     const existing = await getDocs(q);
+
     if (!existing.empty) {
+      // 🟥 User already reviewed → reject
       showToast("You already submitted a review for this artwork.", "error");
-      lockReviewUI();
       return;
     }
 
+    // 🟩 Add new review
     await addDoc(reviewsRef, {
       artworkId: artworkTitle,
       reviewerId: walletAddress,
@@ -2881,14 +2880,19 @@ async function submitArtworkReview() {
     });
 
     showToast("Review added successfully!", "success");
-    lockReviewUI();
+
+    // Optional: reset inputs after submission
+    document.getElementById("reviewComment").value = "";
+    selectedRating = 0;
+    updateStarDisplay(0);
+
   } catch (err) {
     console.error("Error submitting review:", err);
     showToast("Failed to submit review", "error");
   }
 }
 
-// 🔹 Star-rating logic
+// ⭐ Interactive star rating logic
 document.addEventListener("DOMContentLoaded", () => {
   const stars = document.querySelectorAll("#starRating i");
   if (!stars.length) return;
@@ -2921,20 +2925,6 @@ function updateStarDisplay(value) {
       star.classList.remove("fa-solid", "star-active");
       star.classList.add("fa-regular");
     }
-  });
-}
-
-// 🔹 Lock UI helper
-function lockReviewUI() {
-  const comment = document.getElementById("reviewComment");
-  const submitBtn = document.getElementById("submitReviewBtn");
-  if (comment) comment.disabled = true;
-  if (submitBtn) submitBtn.disabled = true;
-
-  const stars = document.querySelectorAll("#starRating i");
-  stars.forEach(star => {
-    star.style.pointerEvents = "none";
-    star.classList.add("locked-star");
   });
 }
 
@@ -3163,6 +3153,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadArtworkReviews,
   });
 });
+
 
 
 
