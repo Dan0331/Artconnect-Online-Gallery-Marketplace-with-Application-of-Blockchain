@@ -2837,7 +2837,6 @@ function loadArtworkReviews(artworkId) {
 
 
 
-// 🟢 Submit or Update Artwork Review
 async function submitArtworkReview() {
   const comment = document.getElementById("reviewComment").value.trim();
   const artworkTitle = document.querySelector(".artwork-detail-info h2")?.textContent;
@@ -2863,63 +2862,50 @@ async function submitArtworkReview() {
     const existing = await getDocs(q);
 
     if (!existing.empty) {
-      // 🟡 If review exists → Update it
-      const reviewDoc = existing.docs[0];
-      await updateDoc(reviewDoc.ref, {
-        rating: selectedRating,
-        comment: comment,
-        updatedAt: new Date().toISOString(),
+      // 🔒 Prevent further editing
+      showToast("You already submitted a review for this artwork.", "error");
+
+      // Disable inputs and buttons
+      document.getElementById("reviewComment").disabled = true;
+      document.getElementById("submitReviewBtn").disabled = true;
+
+      // Optional: visually lock stars
+      const stars = document.querySelectorAll("#starRating i");
+      stars.forEach(star => {
+        star.style.pointerEvents = "none";
+        star.classList.add("locked-star");
       });
 
-      showToast("Your review has been updated!", "success");
-    } else {
-      // 🟢 If no review → Add a new one
-      await addDoc(reviewsRef, {
-        artworkId: artworkTitle,
-        reviewerId: walletAddress,
-        reviewerName: walletAddress.slice(0, 6) + "..." + walletAddress.slice(-4),
-        rating: selectedRating,
-        comment,
-        createdAt: new Date().toISOString(),
-      });
-
-      showToast("Review added successfully!", "success");
+      return;
     }
 
-    // 🧹 Reset input and star UI after submission
-    document.getElementById("reviewComment").value = "";
-    selectedRating = 0;
-    updateStarDisplay(0);
+    // 🟢 Add a new review
+    await addDoc(reviewsRef, {
+      artworkId: artworkTitle,
+      reviewerId: walletAddress,
+      reviewerName: walletAddress.slice(0, 6) + "..." + walletAddress.slice(-4),
+      rating: selectedRating,
+      comment,
+      createdAt: new Date().toISOString(),
+    });
+
+    showToast("Review added successfully!", "success");
+
+    // 🔒 Disable input & stars after successful submission
+    document.getElementById("reviewComment").disabled = true;
+    document.getElementById("submitReviewBtn").disabled = true;
+
+    const stars = document.querySelectorAll("#starRating i");
+    stars.forEach(star => {
+      star.style.pointerEvents = "none";
+      star.classList.add("locked-star");
+    });
 
   } catch (err) {
-    console.error("Error adding/updating review:", err);
+    console.error("Error submitting review:", err);
     showToast("Failed to submit review", "error");
   }
 }
-
-// 🟡 Interactive Star Rating
-let selectedRating = 0;
-
-document.addEventListener("DOMContentLoaded", () => {
-  const stars = document.querySelectorAll("#starRating i");
-  if (!stars.length) return;
-
-  stars.forEach(star => {
-    star.addEventListener("click", () => {
-      selectedRating = parseInt(star.getAttribute("data-value"));
-      updateStarDisplay(selectedRating);
-    });
-
-    star.addEventListener("mouseover", () => {
-      const hoverValue = parseInt(star.getAttribute("data-value"));
-      updateStarDisplay(hoverValue);
-    });
-
-    star.addEventListener("mouseleave", () => {
-      updateStarDisplay(selectedRating);
-    });
-  });
-});
 
 // 🟣 Star Display Update Function
 function updateStarDisplay(value) {
@@ -3160,6 +3146,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadArtworkReviews,
   });
 });
+
 
 
 
